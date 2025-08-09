@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1085438030835",
+    "project_id": "sportsinnoti",
+    "storage_bucket": "sportsinnoti.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1085438030835:android:ffbeae6b40d6b7081b9886",
+        "android_client_info": {
+          "package_name": "com.example.sportsin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzSHhaeCid6B-RQU4dzsBO5qRQ9uJtub4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
