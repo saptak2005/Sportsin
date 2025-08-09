@@ -1,0 +1,186 @@
+package model
+
+type Achievement struct {
+	AppModel
+	UserId         string  `json:"user_id"`
+	Date           string  `json:"date"`
+	SportId        string  `json:"sport_id"`
+	Tournament     string  `json:"tournament"`
+	Description    string  `json:"description"`
+	Level          Level   `json:"level"`
+	Stats          any     `json:"stats"`
+	CertificateUrl *string `json:"certificate_url,omitempty"`
+}
+package model
+
+type Address struct {
+	AppModel
+	UserId     string `json:"user_id"`
+	Country    string `json:"country"`
+	State      string `json:"state"`
+	City       string `json:"city"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	PostalCode string `json:"postal_code"`
+}
+package model
+
+type AppModel struct {
+	Id        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+package model
+
+type ChatMessage struct {
+	AppModel
+	ChatRoomId string `json:"chat_room_id"`
+	SenderId   string `json:"sender_id"`
+	Read       bool   `json:"read"`
+	Message    string `json:"message"`
+}
+package model
+
+type ChatRoom struct {
+	AppModel
+	User1         string `json:"user_1"`          // User ID of the first user in the chat room
+	User2         string `json:"user_2"`          // User ID of the second user in the chat room
+	LastMessageAt string `json:"last_message_at"` // Timestamp of the last message in the chat room
+}
+package model
+
+type Plaer struct {
+	User
+	Level           Level   `json:"level"`
+	InterestLevel   Level   `json:"interest_level"`
+	InterestCountry *string `json:"interest_location,omitempty"`
+}
+package model
+
+type Post struct {
+	AppModel
+	UserId  string   `json:"user_id"`
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags"`
+}
+package model
+
+type Iages struct {
+	AppModel
+	LinkId   string `json:"link_id"`
+	ImageUrl string `json:"image_url"`
+}
+package model
+
+type Recruiter struct {
+	User
+	OrganizationName string `json:"organization_name"`
+	OrganizationId   string `json:"organization_id"`
+	PhoneNumber      string `json:"phone_number"`
+	Position         string `json:"position"`
+}
+package model
+
+type Sport struct {
+	AppModel
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+package model
+
+type Tournament struct {
+	AppModel
+	HostId      string            `json:"host_id"`
+	Title       string            `json:"title"`
+	Description *string           `json:"description,omitempty"`
+	Location    string            `json:"location"`
+	SportId     string            `json:"sport_id"`
+	MinAge      *int              `json:"min_age,omitempty"`
+	MaxAge      *int              `json:"max_age,omitempty"`
+	Level       *Level            `json:"level,omitempty"`
+	Gender      *Gender           `json:"gender,omitempty"`
+	Country     *string           `json:"country,omitempty"`
+	Status      *TournamentStatus `json:"status,omitempty"`
+	StartDate   string            `json:"start_date"`
+	EndDate     string            `json:"end_date"`
+	BannerUrl   *string           `json:"banner_url,omitempty"`
+}
+package model
+
+type TounramentParticipants struct {
+	AppModel
+	UserId       string              `json:"user_id"`
+	TournamentId string              `json:"tournament_id"`
+	Status       ParticipationStatus `json:"status"` // Status can be "pending", "accepted", "rejected"
+
+}
+package model
+
+type Gender string
+
+const (
+	Male         Gender = "male"
+	Female       Gender = "female"
+	Other        Gender = "other"
+	RatherNotSay Gender = "rather_not_say"
+)
+
+type Role string
+
+const (
+	AdminRole     Role = "admin"
+	PlayerRole    Role = "player"
+	RecruiterRole Role = "recruiter"
+)
+
+type Level string
+
+const (
+	DistrictLevel      Level = "district"
+	StateLevel         Level = "state"
+	CountryLevel       Level = "country"
+	InternationalLevel Level = "international"
+	PersonalLevel      Level = "personal"
+)
+
+type TournamentStatus string
+
+const (
+	Scheduled TournamentStatus = "scheduled"
+	Started   TournamentStatus = "started"
+	Ended     TournamentStatus = "ended"
+	Cancelled TournamentStatus = "cancelled"
+)
+
+type ParticipationStatus string
+
+const (
+	Pending  ParticipationStatus = "pending"
+	Accepted ParticipationStatus = "accepted"
+	Rejected ParticipationStatus = "rejected"
+)
+package model
+
+type User struct {
+	AppModel
+	UserName       string  `json:"user_name"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
+	Email          string  `json:"email"`
+	PasswordHash   string  `json:"password_hash"`
+	Role           Role    `json:"role"`
+	Name           string  `json:"name"`
+	MiddleName     *string `json:"middle_name,omitempty"`
+	Surname        string  `json:"surname"`
+	DOB            string  `json:"dob"`
+	Gender         Gender  `json:"gender"`
+	About          *string `json:"about,omitempty"`
+}
+package model
+
+type UserSkill struct {
+	AppModel
+	UserId  string `json:"user_id"`
+	SportId string `json:"sport_id"`
+}
+
