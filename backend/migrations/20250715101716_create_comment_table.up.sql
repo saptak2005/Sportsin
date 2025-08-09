@@ -1,0 +1,15 @@
+-- Migration: create_comment_table (UP)
+-- Created: 2025-07-15 10:17:16
+
+CREATE TABLE IF NOT EXISTS "Comment"(
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  UserId UUID NOT NULL,
+  PostId UUID NOT NULL,
+  ParentId UUID,
+  Content TEXT NOT NULL,
+  CreatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
+  UpdatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY (UserId) REFERENCES "User"(id) ON DELETE CASCADE,
+  FOREIGN KEY (PostId) REFERENCES "Post"(id) ON DELETE CASCADE,
+  FOREIGN KEY (ParentId) REFERENCES "Comment"(id) ON DELETE CASCADE
+)

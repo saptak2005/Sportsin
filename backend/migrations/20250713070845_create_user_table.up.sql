@@ -1,0 +1,11 @@
+-- Migration: create_user_table (UP)
+-- Created: 2025-07-13 07:08:45
+
+CREATE TABLE IF NOT EXISTS "User"(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
