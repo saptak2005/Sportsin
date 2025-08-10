@@ -12,6 +12,8 @@ class DbExceptions implements Exception {
   // Static utility methods for handling exceptions
   static Exception handleDioException(DioException e, String operation) {
     if (e.response != null) {
+      // Debug: Log the response data type and content for troubleshooting
+      _debugLogResponseData(e.response!.data, operation);
       return _handleHttpError(
           e.response!.statusCode!, e.response!.data, operation);
     } else {
@@ -19,49 +21,107 @@ class DbExceptions implements Exception {
     }
   }
 
+  // Debug method to log response data for troubleshooting
+  static void _debugLogResponseData(dynamic data, String operation) {
+    print('🔍 Debug - Error response for $operation:');
+    print('   Type: ${data.runtimeType}');
+    print('   Content: $data');
+    if (data is Map) {
+      print('   Keys: ${data.keys.toList()}');
+    }
+  }
+
+  // Helper method to safely extract error message from response data
+  static String? _extractErrorMessage(dynamic errorData) {
+    if (errorData == null) return null;
+
+    if (errorData is Map<String, dynamic>) {
+      // Try different common error message keys
+      return errorData['error']?.toString() ??
+          errorData['message']?.toString() ??
+          errorData['detail']?.toString() ??
+          errorData['details']?.toString() ??
+          errorData['msg']?.toString();
+    } else if (errorData is String) {
+      return errorData;
+    } else if (errorData is List && errorData.isNotEmpty) {
+      // Handle array of errors
+      final firstError = errorData.first;
+      if (firstError is Map<String, dynamic>) {
+        return _extractErrorMessage(firstError);
+      } else {
+        return firstError.toString();
+      }
+    } else {
+      return errorData.toString();
+    }
+  }
+
   static Exception _handleHttpError(
       int statusCode, dynamic errorData, String operation) {
-    final errorMessage = errorData?['error']?.toString();
+    final errorMessage = _extractErrorMessage(errorData);
 
     switch (statusCode) {
       case 400:
         return DbInvalidInputException(
           message: 'Bad request: Invalid data provided',
-          details: errorMessage ?? 'Invalid request data',
+          details: errorMessage ?? 'Invalid request data for $operation',
         );
       case 401:
-        return const DbAuthenticationException(
+        return DbAuthenticationException(
           message: 'User not authenticated',
-          details: 'Authentication required',
+          details: errorMessage ?? 'Authentication required for $operation',
         );
       case 403:
-        return const DbAuthorizationException(
+        return DbAuthorizationException(
           message: 'Access denied',
-          details: 'User not authorized for this operation',
+          details: errorMessage ?? 'User not authorized for $operation',
         );
       case 404:
-        return const DbNotFoundException(
+        return DbNotFoundException(
           message: 'Resource not found',
-          details: 'The requested resource does not exist',
+          details: errorMessage ??
+              'The requested resource for $operation does not exist',
+        );
+      case 409:
+        return DbConflictException(
+          message: 'Resource conflict',
+          details: errorMessage ?? 'Resource conflict during $operation',
+        );
+      case 422:
+        return DbInvalidInputException(
+          message: 'Validation failed',
+          details: errorMessage ?? 'Input validation failed for $operation',
         );
       case 429:
-        return const DbRateLimitExceededException(
+        return DbRateLimitExceededException(
           message: 'Too many requests',
-          details: 'Rate limit exceeded',
+          details: errorMessage ?? 'Rate limit exceeded for $operation',
         );
       case 500:
         return DbServiceUnavailableException(
           message: 'Server error occurred',
-          details: errorMessage ?? 'Internal server error',
+          details: errorMessage ?? 'Internal server error during $operation',
+        );
+      case 502:
+        return DbServiceUnavailableException(
+          message: 'Bad gateway',
+          details: errorMessage ?? 'Bad gateway error during $operation',
         );
       case 503:
-        return const DbServiceUnavailableException(
+        return DbServiceUnavailableException(
           message: 'Service temporarily unavailable',
-          details: 'Service is temporarily down',
+          details: errorMessage ?? 'Service is temporarily down for $operation',
+        );
+      case 504:
+        return DbTimeoutException(
+          message: 'Gateway timeout',
+          details: errorMessage ?? 'Gateway timeout during $operation',
         );
       default:
-        return Exception(
-          'Request failed with status $statusCode: ${errorMessage ?? 'Unknown error'}',
+        return DbUnknownException(
+          message: 'Request failed with status $statusCode',
+          details: errorMessage ?? 'Unknown error occurred during $operation',
         );
     }
   }

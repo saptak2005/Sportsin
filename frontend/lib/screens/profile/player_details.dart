@@ -279,7 +279,10 @@ class _PlayerDetailsScreenState extends State<PlayerDetailsScreen> {
           // User's Posts Feed
           SizedBox(
             height: 400, // Fixed height for the posts section
-            child: FeedScreen(userId: player.id),
+            child: FeedScreen(
+              userId: player.id,
+              fromProfileScreen: true,
+            ),
           ),
 
           const SizedBox(height: 20),

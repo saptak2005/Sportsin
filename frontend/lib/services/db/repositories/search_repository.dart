@@ -23,12 +23,17 @@ class SearchRepository {
           'q': query,
         },
       );
-
-      if (response.data is List) {
+      if (response.statusCode == 200) {
+        if (response.data == null || response.data.isEmpty) {
+          return [];
+        }
         final List<dynamic> data = response.data;
         return data.map((json) => UserSearchResult.fromJson(json)).toList();
       } else {
-        return [];
+        throw DbExceptions(
+          message: 'Failed to search users',
+          details: 'Unexpected response status: ${response.statusCode}',
+        );
       }
     } on DioException catch (e) {
       if (DbExceptions.shouldReturnNullForPost(e)) {

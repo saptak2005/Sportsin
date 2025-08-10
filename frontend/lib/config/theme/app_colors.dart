@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// LinkedIn-inspired color scheme for SportsIN app
-/// Colors based on LinkedIn's official brand colors and design system
+/// SportsIN app color scheme (Red / Black / White)
+/// Primary accents are red, with black and white surfaces/typography.
 class AppColors {
-  // LinkedIn Primary Colors
-  static const Color linkedInBlue =
-      Color(0xFF0A66C2); // LinkedIn's signature blue
-  static const Color linkedInBlueDark = Color(0xFF004182); // Darker variant
-  static const Color linkedInBlueLight = Color(0xFF378FE9); // Lighter variant
+    // Primary (Red) accents
+    // Using Material Red scale: light/dark variants for emphasis and containers
+    static const Color linkedInBlue = Color(0xFFD32F2F); // Primary Red (700)
+    static const Color linkedInBlueDark = Color(0xFFB71C1C); // Dark Red (900)
+    static const Color linkedInBlueLight = Color(0xFFEF5350); // Light Red (400)
 
   // LinkedIn Supporting Colors
   static const Color linkedInGreen =
@@ -15,15 +15,12 @@ class AppColors {
   static const Color linkedInOrange = Color(0xFFDD5143); // Warning/notification
   static const Color linkedInPurple = Color(0xFF7B68EE); // Premium features
 
-  // Light Theme Colors (LinkedIn Light Mode)
-  static const Color lightBackground =
-      Color(0xFFF3F2EF); // LinkedIn's light background
-  static const Color lightSurface = Color(0xFFFFFFFF); // Pure white cards
-  static const Color lightSurfaceVariant =
-      Color(0xFFF8F9FA); // Subtle surface variation
+    // Light Theme Colors
+    static const Color lightBackground = Color(0xFFFFFFFF); // Pure white
+    static const Color lightSurface = Color(0xFFFFFFFF); // Pure white cards
+    static const Color lightSurfaceVariant = Color(0xFFF5F5F5); // Subtle grey
   static const Color lightPrimary = linkedInBlue;
-  static const Color lightPrimaryContainer =
-      Color(0xFFE7F3FF); // Light blue container
+    static const Color lightPrimaryContainer = Color(0xFFFFEBEE); // Light red
   static const Color lightSecondary = Color(0xFF666666); // Secondary text
   static const Color lightSecondaryContainer =
       Color(0xFFF0F0F0); // Secondary containers
@@ -41,16 +38,12 @@ class AppColors {
   static const Color lightOutline =
       Color(0xFFD9D9D9); // LinkedIn's border color
 
-  // Dark Theme Colors (LinkedIn Dark Mode)
-  static const Color darkBackground =
-      Color(0xFF1B1F23); // LinkedIn's dark background
-  static const Color darkSurface = Color(0xFF282E33); // Dark cards
-  static const Color darkSurfaceVariant =
-      Color(0xFF2F3539); // Darker surface variation
-  static const Color darkPrimary =
-      Color(0xFF70B5F9); // Lighter blue for dark mode
-  static const Color darkPrimaryContainer =
-      Color(0xFF1A472A); // Dark blue container
+    // Dark Theme Colors
+    static const Color darkBackground = Color(0xFF0D1117); // Near-black
+    static const Color darkSurface = Color(0xFF161B22); // Dark cards
+    static const Color darkSurfaceVariant = Color(0xFF1F242A); // Darker surface
+    static const Color darkPrimary = Color(0xFFEF5350); // Light Red for dark
+    static const Color darkPrimaryContainer = Color(0xFF4A0E0E); // Deep red
   static const Color darkSecondary =
       Color(0xFFB0B0B0); // Secondary text in dark
   static const Color darkSecondaryContainer =
@@ -86,17 +79,17 @@ class AppColors {
   static const Color warningDark = Color(0xFFE65100);
   static const Color onWarning = Color(0xFFFFFFFF);
 
-  // Info Colors (LinkedIn Blue variants)
-  static const Color info = linkedInBlue;
-  static const Color infoLight = Color(0xFFE3F2FD);
-  static const Color infoDark = Color(0xFF1565C0);
+    // Info Colors (aligned to primary red palette)
+    static const Color info = linkedInBlue;
+    static const Color infoLight = Color(0xFFFFEBEE);
+    static const Color infoDark = Color(0xFF8E0000);
   static const Color onInfo = Color(0xFFFFFFFF);
 
-  // Sports-specific colors (inspired by LinkedIn but adapted for sports)
-  static const Color sportsGreen = Color(0xFF057642); // Field/success color
-  static const Color sportsBlue = linkedInBlue; // Primary sports color
-  static const Color sportsOrange = Color(0xFFFF8A00); // Energy/activity color
-  static const Color sportsPurple = linkedInPurple; // Premium/special features
+    // Sports-specific colors
+    static const Color sportsGreen = Color(0xFF057642); // Field/success color
+    static const Color sportsBlue = linkedInBlue; // Primary accent (red now)
+    static const Color sportsOrange = Color(0xFFFF8A00); // Energy/activity color
+    static const Color sportsPurple = linkedInPurple; // Premium/special features
 
   // Social Media Colors (for authentication buttons)
   static const Color googleRed = Color(0xFFDB4437);
@@ -104,7 +97,7 @@ class AppColors {
   static const Color twitterBlue = Color(0xFF1DA1F2);
   static const Color appleBlack = Color(0xFF000000);
 
-  // LinkedIn-inspired gradients
+    // Primary gradients (red)
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [linkedInBlue, linkedInBlueDark],
     begin: Alignment.topLeft,

@@ -153,13 +153,17 @@ class _CompleteOrUpdateProfileScreenState
     final isRecruiter = widget.authUser.role == Role.recruiter;
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title:
             Text(widget.isEditMode ? 'Edit Profile' : 'Complete Your Profile'),
         centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(10.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -169,43 +173,69 @@ class _CompleteOrUpdateProfileScreenState
 
               // Profile Picture Section
               _buildProfilePictureSection(),
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
-              // Basic Information Section
-              _buildBasicInfoSection(),
+              // Basic Information Card
+              _buildSectionCard(
+                title: 'Basic Information',
+                icon: Icons.person_outline,
+                child: _buildBasicInfoSection(),
+              ),
 
               // Role-specific sections
               if (isPlayer) ...[
-                const SizedBox(height: 30),
-                _buildPlayerSpecificSection(),
+                const SizedBox(height: 24),
+                _buildSectionCard(
+                  title: 'Player Information',
+                  icon: Icons.sports_soccer,
+                  child: _buildPlayerSpecificSection(),
+                ),
               ],
 
               if (isRecruiter) ...[
-                const SizedBox(height: 30),
-                _buildRecruiterSpecificSection(),
+                const SizedBox(height: 24),
+                _buildSectionCard(
+                  title: 'Organization Information',
+                  icon: Icons.business,
+                  child: _buildRecruiterSpecificSection(),
+                ),
               ],
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
-              // About Field
-              TextFormField(
-                controller: _aboutController,
-                decoration: const InputDecoration(
-                  labelText: 'About (Optional)',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
+              // Additional Information Card
+              _buildSectionCard(
+                title: 'Additional Information',
+                icon: Icons.info_outline,
+                child: Column(
+                  children: [
+                    // About Field
+                    TextFormField(
+                      controller: _aboutController,
+                      decoration: InputDecoration(
+                        labelText: 'About (Optional)',
+                        hintText: 'Tell us about yourself...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignLabelWithHint: true,
+                        contentPadding: const EdgeInsets.all(16),
+                      ),
+                      maxLines: 4,
+                    ),
+                    
+                    if (!widget.isEditMode) ...[
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _referralCodeController,
+                        labelText: 'Referral Code (Optional)',
+                      ),
+                    ],
+                  ],
                 ),
-                maxLines: 4,
               ),
 
-              const SizedBox(height: 30),
-              if (!widget.isEditMode) ...[
-                CustomTextField(
-                  controller: _referralCodeController,
-                  labelText: 'Referral Code (Optional)',
-                ),
-                const SizedBox(height: 30),
-              ],
+              const SizedBox(height: 32),
 
               // Submit Button
               CustomButton(
@@ -214,7 +244,7 @@ class _CompleteOrUpdateProfileScreenState
                 isLoading: _isLoading,
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -222,59 +252,155 @@ class _CompleteOrUpdateProfileScreenState
     );
   }
 
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Card(
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfilePictureSection() {
     return Center(
-      child: Stack(
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 60,
-            backgroundColor: Colors.grey[300],
-            backgroundImage: _selectedProfileImage != null
-                ? FileImage(_selectedProfileImage!) as ImageProvider
-                : (_profileImageUrl != null &&
-                        _profileImageUrl!.isNotEmpty &&
-                        _profileImageUrl!.startsWith('http'))
-                    ? NetworkImage(_profileImageUrl!) as ImageProvider
-                    : null,
-            child: (_selectedProfileImage == null &&
-                    (_profileImageUrl == null ||
-                        _profileImageUrl!.isEmpty ||
-                        !_profileImageUrl!.startsWith('http')))
-                ? const Icon(
-                    Icons.person,
-                    size: 60,
-                    color: Colors.grey,
-                  )
-                : null,
-          ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: _isUploadingImage ? null : _pickProfileImage,
-              child: Container(
-                padding: const EdgeInsets.all(8),
+          Stack(
+            children: [
+              Container(
                 decoration: BoxDecoration(
-                  color: _isUploadingImage ? Colors.grey : Colors.blue,
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: _isUploadingImage
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                child: CircleAvatar(
+                  radius: 65,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                  backgroundImage: _selectedProfileImage != null
+                      ? FileImage(_selectedProfileImage!) as ImageProvider
+                      : (_profileImageUrl != null &&
+                              _profileImageUrl!.isNotEmpty &&
+                              _profileImageUrl!.startsWith('http'))
+                          ? NetworkImage(_profileImageUrl!) as ImageProvider
+                          : null,
+                  child: (_selectedProfileImage == null &&
+                          (_profileImageUrl == null ||
+                              _profileImageUrl!.isEmpty ||
+                              !_profileImageUrl!.startsWith('http')))
+                      ? Icon(
+                          Icons.person,
+                          size: 65,
+                          color: Colors.white,
+                        )
+                      : null,
+                ),
               ),
-            ),
+              Positioned(
+                bottom: 5,
+                right: 5,
+                child: GestureDetector(
+                  onTap: _isUploadingImage ? null : _pickProfileImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _isUploadingImage 
+                          ? Colors.grey 
+                          : Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                        width: 3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: _isUploadingImage
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Profile Photo',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tap to ${_profileImageUrl != null ? 'change' : 'add'} photo',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withOpacity(0.7),
+                ),
           ),
         ],
       ),
@@ -288,10 +414,18 @@ class _CompleteOrUpdateProfileScreenState
         // Email Field (Read-only)
         TextFormField(
           controller: _emailController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Email',
-            border: OutlineInputBorder(),
-            suffixIcon: Icon(Icons.lock, color: Colors.grey),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            suffixIcon: Icon(
+              Icons.lock, 
+              color: Colors.white,
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            contentPadding: const EdgeInsets.all(16),
           ),
           readOnly: true,
         ),
@@ -301,10 +435,18 @@ class _CompleteOrUpdateProfileScreenState
         // Role Field (Read-only)
         TextFormField(
           controller: _roleController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Role',
-            border: OutlineInputBorder(),
-            suffixIcon: Icon(Icons.lock, color: Colors.grey),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            suffixIcon: Icon(
+              Icons.lock, 
+              color: Colors.white,
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            contentPadding: const EdgeInsets.all(16),
           ),
           readOnly: true,
         ),
@@ -358,10 +500,13 @@ class _CompleteOrUpdateProfileScreenState
         // Date of Birth Field
         TextFormField(
           controller: _dobController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Date of Birth',
-            border: OutlineInputBorder(),
-            suffixIcon: Icon(Icons.calendar_today),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            suffixIcon: const Icon(Icons.calendar_today),
+            contentPadding: const EdgeInsets.all(16),
           ),
           readOnly: true,
           onTap: () => _selectDate(context),
@@ -403,14 +548,6 @@ class _CompleteOrUpdateProfileScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Player Information',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 16),
-
         // Player Level
         CustomDropdownField(
           value: _selectedLevel?.value,
@@ -470,14 +607,6 @@ class _CompleteOrUpdateProfileScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Organization Information',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 16),
-
         // Organization Name
         CustomTextField(
           controller: _organizationNameController,

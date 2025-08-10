@@ -102,11 +102,6 @@ class TournamentRepository {
             filename: fileName,
           ),
         ));
-      } else {
-        throw DbImageUploadException(
-          message: 'Banner image file does not exist',
-          details: 'File path: ${image.path}',
-        );
       }
 
       final response = await DioClient.instance.post(
@@ -184,8 +179,11 @@ class TournamentRepository {
       final response =
           await DioClient.instance.get('tournaments/$tournamentId');
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final tournamentData = response.data;
+        if (tournamentData == null) {
+          return null;
+        }
 
         if (tournamentData is Map<String, dynamic>) {
           final tournament = Tournament.fromJson(tournamentData);
@@ -242,7 +240,10 @@ class TournamentRepository {
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
+        if (response.data == null) {
+          return [];
+        }
         final List<dynamic> participantsList = response.data['participants'];
 
         final List<TournamentParticipants> participants = participantsList
@@ -273,7 +274,7 @@ class TournamentRepository {
     }
   }
 
-  Future<List<Tournament>> getTournaments({
+  Future<List<TournamentDetails>> getTournaments({
     String? hostId,
     String? sportId,
     String? status,
@@ -308,19 +309,22 @@ class TournamentRepository {
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final Map<String, dynamic> responseMap = response.data;
+      if (response.statusCode == 200) {
+        final responseMap = response.data;
+        if (responseMap == null) {
+          return [];
+        }
 
         if (responseMap.containsKey('tournaments') &&
             responseMap['tournaments'] is List) {
-          final List<dynamic> tournamentsDataList = responseMap['tournaments'];
+          final List<dynamic> dataList = responseMap['tournaments'];
 
-          final List<Tournament> tournaments = tournamentsDataList
+          final List<TournamentDetails> tournamentDetailsList = dataList
               .where((e) => e != null && e is Map<String, dynamic>)
-              .map((e) => Tournament.fromJson(e as Map<String, dynamic>))
+              .map((e) => TournamentDetails.fromJson(e as Map<String, dynamic>))
               .toList();
 
-          return tournaments;
+          return tournamentDetailsList;
         } else {
           return [];
         }
@@ -605,7 +609,6 @@ class TournamentRepository {
     }
   }
 
-  /// Gets user's participated tournaments
   Future<List<TournamentParticipants>> getMyParticipatedTournaments({
     ParticipationStatus? status,
   }) async {
@@ -621,22 +624,26 @@ class TournamentRepository {
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final participationsData = response.data;
+        if (participationsData == null) {
+          return [];
+        }
 
-        if (participationsData is List) {
-          final List<TournamentParticipants> participations = participationsData
-              .where((e) => e != null && e is Map<String, dynamic>)
-              .map((e) =>
-                  TournamentParticipants.fromJson(e as Map<String, dynamic>))
+        if (participationsData is Map<String, dynamic> &&
+            participationsData.containsKey('tournaments') &&
+            participationsData['tournaments'] is List) {
+          final List<dynamic> dataList = participationsData['tournaments'];
+          final List<TournamentParticipants> participations = dataList
+              .whereType<Map<String, dynamic>>()
+              .map((e) => TournamentParticipants.fromJson(e))
               .toList();
-
           return participations;
         } else {
           throw DbQueryException(
             message: 'Invalid response format',
             details:
-                'Expected List but received: ${participationsData.runtimeType}',
+                'Expected a Map with a "tournaments" list but received: ${participationsData.runtimeType}',
           );
         }
       } else {
@@ -654,6 +661,164 @@ class TournamentRepository {
     } catch (e) {
       throw DbQueryException(
         message: 'Unexpected error retrieving my tournament participations',
+        details: 'Error: $e',
+      );
+    }
+  }
+
+  Future<Tournament> updateTournamentStatus({
+    required String tournamentId,
+    required TournamentStatus status,
+  }) async {
+    try {
+      if (tournamentId.isEmpty) {
+        throw const DbInvalidInputException(
+          message: 'Tournament ID is required',
+          details: 'Tournament ID cannot be empty',
+        );
+      }
+
+      final Map<String, dynamic> requestBody = {
+        'status': status.toJson(),
+      };
+
+      final response = await DioClient.instance.put(
+        'tournaments/$tournamentId',
+        data: requestBody,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final updatedTournament = Tournament.fromJson(response.data);
+        return updatedTournament;
+      } else {
+        throw DbUpdateException(
+          message: 'Unexpected response status',
+          details:
+              'Status: ${response.statusCode}, Message: ${response.statusMessage}',
+        );
+      }
+    } on DioException catch (e) {
+      throw DbExceptions.handleDioException(e, 'updating tournament status');
+    } on DbExceptions {
+      rethrow;
+    } catch (e) {
+      throw DbUpdateException(
+        message: 'Unexpected error updating tournament status',
+        details: 'Error: $e',
+      );
+    }
+  }
+
+  Future<List<TournamentParticipants>> getTournamentParticipantsWithDetails(
+      String tournamentId,
+      {String? status}) async {
+    try {
+      if (tournamentId.isEmpty) {
+        throw const DbInvalidInputException(
+          message: 'Tournament ID is required',
+          details: 'Tournament ID cannot be empty',
+        );
+      }
+
+      final Map<String, dynamic> queryParams = {};
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      final response = await DioClient.instance.get(
+        'tournaments/$tournamentId/participants-details',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['participants'] == null) {
+          return [];
+        }
+        final List<dynamic> participantsList = response.data['participants'];
+
+        return participantsList
+            .whereType<Map<String, dynamic>>()
+            .map((itemMap) => TournamentParticipants.fromJson(itemMap))
+            .toList();
+      } else {
+        throw DbQueryException(
+          message: 'Unexpected response status',
+          details:
+              'Status: ${response.statusCode}, Message: ${response.statusMessage}',
+        );
+      }
+    } on DioException catch (e) {
+      throw DbExceptions.handleDioException(
+          e, 'retrieving detailed tournament participants');
+    } on DbExceptions {
+      rethrow;
+    } catch (e) {
+      throw DbQueryException(
+        message: 'Unexpected error retrieving detailed tournament participants',
+        details: 'Error: $e',
+      );
+    }
+  }
+
+  Future<void> bulkUpdateParticipantStatus({
+    required String tournamentId,
+    required List<Map<String, String>> participantUpdates,
+  }) async {
+    try {
+      final Map<String, dynamic> requestBody = {
+        'participants': participantUpdates,
+      };
+
+      final response = await DioClient.instance.put(
+        'tournaments/$tournamentId/participants/bulk-status',
+        data: requestBody,
+      );
+
+      if (response.statusCode != 200) {
+        throw DbUpdateException(
+          message: 'Failed to bulk update statuses',
+          details: 'Status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw DbExceptions.handleDioException(
+          e, 'bulk updating participant status');
+    } on DbExceptions {
+      rethrow;
+    } catch (e) {
+      throw DbUpdateException(
+        message: 'Unexpected error during bulk update',
+        details: 'Error: $e',
+      );
+    }
+  }
+
+  Future<TournamentParticipants?> getUserParticipationStatus(
+      String tournamentId) async {
+    try {
+      final response = await DioClient.instance.get(
+        'tournaments/$tournamentId/my-participation',
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return TournamentParticipants.fromJson(response.data);
+      } else {
+        throw DbQueryException(
+          message: 'Unexpected response status',
+          details: 'Status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return null;
+      }
+      throw DbExceptions.handleDioException(
+          e, 'retrieving user participation status');
+    } on DbExceptions {
+      rethrow;
+    } catch (e) {
+      throw DbQueryException(
+        message: 'Unexpected error retrieving participation status',
         details: 'Error: $e',
       );
     }

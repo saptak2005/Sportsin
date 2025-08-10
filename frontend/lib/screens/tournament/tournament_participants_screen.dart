@@ -30,6 +30,11 @@ class _TournamentParticipantsScreenState
   String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
+  // Bulk update functionality
+  Set<String> selectedParticipants = {};
+  bool isBulkMode = false;
+  bool isBulkUpdating = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,8 +54,9 @@ class _TournamentParticipantsScreenState
     });
 
     try {
+      // Use the new detailed participants method
       final fetchedParticipants = await TournamentRepository.instance
-          .getTournamentParticipants(widget.tournament.id);
+          .getTournamentParticipantsWithDetails(widget.tournament.id);
 
       setState(() {
         participants = fetchedParticipants;
@@ -67,6 +73,86 @@ class _TournamentParticipantsScreenState
   Future<void> _refreshParticipants() async {
     await _loadParticipants();
     CustomToast.showInfo(message: 'Participants list refreshed');
+  }
+
+  // Bulk update functionality
+  void _toggleBulkMode() {
+    setState(() {
+      isBulkMode = !isBulkMode;
+      if (!isBulkMode) {
+        selectedParticipants.clear();
+      }
+    });
+  }
+
+  void _toggleParticipantSelection(String participantId) {
+    setState(() {
+      if (selectedParticipants.contains(participantId)) {
+        selectedParticipants.remove(participantId);
+      } else {
+        selectedParticipants.add(participantId);
+      }
+    });
+  }
+
+  void _selectAllParticipants() {
+    setState(() {
+      selectedParticipants = filteredParticipants
+          .where((p) => p.status == ParticipationStatus.pending)
+          .map((p) => p.id)
+          .toSet();
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      selectedParticipants.clear();
+    });
+  }
+
+  Future<void> _bulkUpdateStatus(ParticipationStatus newStatus) async {
+    if (selectedParticipants.isEmpty) {
+      CustomToast.showError(message: 'No participants selected');
+      return;
+    }
+
+    setState(() {
+      isBulkUpdating = true;
+    });
+
+    try {
+      final updates = selectedParticipants
+          .map((participantId) => {
+                'participant_id': participantId,
+                'status': newStatus.toJson(),
+              })
+          .toList();
+
+      await TournamentRepository.instance.bulkUpdateParticipantStatus(
+        tournamentId: widget.tournament.id,
+        participantUpdates: updates,
+      );
+
+      CustomToast.showSuccess(
+        message:
+            'Updated ${selectedParticipants.length} participants successfully',
+      );
+
+      setState(() {
+        selectedParticipants.clear();
+        isBulkMode = false;
+      });
+
+      await _refreshParticipants();
+    } catch (e) {
+      CustomToast.showError(
+        message: 'Failed to update participants: ${e.toString()}',
+      );
+    } finally {
+      setState(() {
+        isBulkUpdating = false;
+      });
+    }
   }
 
   Future<User?> _getUserById(String userId) async {
@@ -105,6 +191,32 @@ class _TournamentParticipantsScreenState
             backgroundColor: const Color(0xFF1E1E1E),
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
+              // Bulk mode toggle
+              if (!isBulkMode)
+                IconButton(
+                  onPressed: _toggleBulkMode,
+                  icon: const Icon(Icons.checklist, color: Colors.white),
+                  tooltip: 'Bulk Select',
+                ),
+              // Bulk mode controls
+              if (isBulkMode) ...[
+                IconButton(
+                  onPressed: _selectAllParticipants,
+                  icon: const Icon(Icons.select_all, color: Colors.white),
+                  tooltip: 'Select All Pending',
+                ),
+                IconButton(
+                  onPressed: _clearSelection,
+                  icon: const Icon(Icons.clear_all, color: Colors.white),
+                  tooltip: 'Clear Selection',
+                ),
+                IconButton(
+                  onPressed: () => _toggleBulkMode(),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  tooltip: 'Exit Bulk Mode',
+                ),
+              ],
+              // Refresh button
               IconButton(
                 onPressed: _refreshParticipants,
                 icon: const Icon(Icons.refresh, color: Colors.white),
@@ -472,7 +584,7 @@ class _TournamentParticipantsScreenState
                     Text(
                       searchQuery.isNotEmpty || filterStatus != null
                           ? 'Try adjusting your search or filter'
-                          : 'Be the first to join this tournament!',
+                          : '',
                       style: TextStyle(color: Colors.grey[500]),
                     ),
                     if (searchQuery.isNotEmpty || filterStatus != null) ...[
@@ -520,6 +632,42 @@ class _TournamentParticipantsScreenState
           ),
         ],
       ),
+      floatingActionButton: isBulkMode && selectedParticipants.isNotEmpty
+          ? _buildBulkActionButton()
+          : null,
+    );
+  }
+
+  Widget _buildBulkActionButton() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Accept button
+        FloatingActionButton.extended(
+          onPressed: isBulkUpdating
+              ? null
+              : () => _bulkUpdateStatus(ParticipationStatus.accepted),
+          backgroundColor: Colors.green,
+          icon: const Icon(Icons.check, color: Colors.white),
+          label: Text(
+            'Accept (${selectedParticipants.length})',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Reject button
+        FloatingActionButton.extended(
+          onPressed: isBulkUpdating
+              ? null
+              : () => _bulkUpdateStatus(ParticipationStatus.rejected),
+          backgroundColor: Colors.red,
+          icon: const Icon(Icons.close, color: Colors.white),
+          label: Text(
+            'Reject (${selectedParticipants.length})',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 
@@ -600,136 +748,163 @@ class _TournamentParticipantsScreenState
   }
 
   Widget _buildParticipantCard(TournamentParticipants participant) {
+    final isSelected = selectedParticipants.contains(participant.id);
+    final canSelect =
+        isBulkMode && participant.status == ParticipationStatus.pending;
+
     return Card(
-      color: const Color(0xFF1E1E1E),
+      color: isSelected
+          ? AppColors.linkedInBlue.withOpacity(0.1)
+          : const Color(0xFF1E1E1E),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
+          color: isSelected
+              ? AppColors.linkedInBlue
+              : Colors.grey.withOpacity(0.2),
+          width: isSelected ? 2 : 1,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.linkedInBlue.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  participant.userId.length >= 2
-                      ? participant.userId.substring(0, 2).toUpperCase()
-                      : participant.userId.substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.linkedInBlue,
-                    fontSize: 20,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: canSelect
+            ? () => _toggleParticipantSelection(participant.id)
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Selection checkbox in bulk mode
+              if (isBulkMode) ...[
+                Checkbox(
+                  value: isSelected,
+                  onChanged: canSelect
+                      ? (value) => _toggleParticipantSelection(participant.id)
+                      : null,
+                  activeColor: AppColors.linkedInBlue,
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              // Avatar
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.linkedInBlue.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    participant.userId.length >= 2
+                        ? participant.userId.substring(0, 2).toUpperCase()
+                        : participant.userId.substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.linkedInBlue,
+                      fontSize: 20,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(width: 16),
+              const SizedBox(width: 16),
 
-            // Participant Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FutureBuilder<User?>(
-                          future: _getUserById(participant.userId),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasError) {
-                              return Text(
-                                'User ${participant.userId}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              );
-                            } else {
-                              final user = snapshot.data;
-                              return Text(
-                                user?.name != null && user!.name.isNotEmpty
-                                    ? '${user.name} ${user.surname}'.trim()
-                                    : 'User ${participant.userId}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              );
-                            }
-                          },
+              // Participant Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FutureBuilder<User?>(
+                            future: _getUserById(participant.userId),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return Text(
+                                  'User ${participant.userId}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              } else {
+                                final user = snapshot.data;
+                                return Text(
+                                  user?.name != null && user!.name.isNotEmpty
+                                      ? '${user.name} ${user.surname}'.trim()
+                                      : 'User ${participant.userId}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                      _buildStatusBadge(participant.status),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 14,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Joined: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(participant.createdAt))}',
-                        style: TextStyle(
-                          fontSize: 14,
+                        _buildStatusBadge(participant.status),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 14,
                           color: Colors.grey[400],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Updated: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(participant.updatedAt))}',
-                        style: TextStyle(
-                          fontSize: 14,
+                        const SizedBox(width: 4),
+                        Text(
+                          'Joined: ${DateFormat('MMM dd').format(DateTime.parse(participant.createdAt))}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
                           color: Colors.grey[400],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 4),
+                        Text(
+                          'Updated: ${DateFormat('MMM dd').format(DateTime.parse(participant.updatedAt))}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Action Button
-            IconButton(
-              onPressed: () => _showParticipantDetails(participant),
-              icon: const Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.grey,
-                size: 16,
-              ),
-            ),
-          ],
+              // Action Button (only show when not in bulk mode)
+              if (!isBulkMode)
+                IconButton(
+                  onPressed: () => _showParticipantDetails(participant),
+                  icon: const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.grey,
+                    size: 16,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -856,8 +1031,6 @@ class _TournamentParticipantsScreenState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('User ID', participant.userId),
-              _buildDetailRow('Tournament ID', participant.tournamentId),
               _buildDetailRow('Status', participant.status.name.toUpperCase()),
               _buildDetailRow(
                   'Joined Date',
@@ -966,7 +1139,6 @@ class _TournamentParticipantsScreenState
                         _updateParticipantStatus(
                             participant, ParticipationStatus.accepted);
                       },
-                      icon: const Icon(Icons.check, color: Colors.white),
                       label: const Text('Accept'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
@@ -985,7 +1157,6 @@ class _TournamentParticipantsScreenState
                         _updateParticipantStatus(
                             participant, ParticipationStatus.rejected);
                       },
-                      icon: const Icon(Icons.close, color: Colors.white),
                       label: const Text('Reject'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

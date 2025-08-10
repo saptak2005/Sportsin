@@ -176,8 +176,12 @@ class AchievementRepository {
       final response =
           await DioClient.instance.get('achievements/$achievementId');
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final achievementData = response.data;
+
+        if (achievementData == null) {
+          return null;
+        }
 
         if (achievementData is Map<String, dynamic>) {
           final achievement = Achievement.fromJson(achievementData);
@@ -216,8 +220,11 @@ class AchievementRepository {
     try {
       final response = await DioClient.instance.get('achievements');
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final achievementsData = response.data;
+        if (achievementsData == null) {
+          return [];
+        }
 
         if (achievementsData is List) {
           final List<Achievement> achievements = achievementsData

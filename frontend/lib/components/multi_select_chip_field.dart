@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportsin/config/theme/app_colors.dart';
 
 /// A reusable multi-selection chip component
 class MultiSelectChipField extends StatelessWidget {
@@ -25,13 +26,15 @@ class MultiSelectChipField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
+        color: AppColors.darkSurface,
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
+          color: const Color(0xFF30363D),
+          width: 1,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -41,7 +44,14 @@ class MultiSelectChipField extends StatelessWidget {
                 : option;
             final isSelected = selectedValues.contains(option);
             return FilterChip(
-              label: Text(label),
+              label: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontSize: 14,
+                ),
+              ),
               selected: isSelected,
               onSelected: (selected) {
                 if (allowMultiple) {
@@ -56,10 +66,18 @@ class MultiSelectChipField extends StatelessWidget {
                   onSelectionChanged(selected ? [option] : []);
                 }
               },
-              selectedColor: selectedColor ??
-                  Theme.of(context).colorScheme.primaryContainer,
-              checkmarkColor:
-                  checkmarkColor ?? Theme.of(context).colorScheme.primary,
+              backgroundColor: Colors.grey[900],
+              selectedColor: selectedColor ?? AppColors.linkedInBlue,
+              checkmarkColor: checkmarkColor ?? Colors.white,
+              side: BorderSide(
+                color: isSelected 
+                    ? AppColors.linkedInBlue 
+                    : const Color(0xFF30363D),
+                width: 1,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             );
           }).toList(),
         ),

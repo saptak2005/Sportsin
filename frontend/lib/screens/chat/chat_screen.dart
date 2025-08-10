@@ -157,10 +157,14 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               children: [
                 CircleAvatar(
+                  backgroundImage: result.profilePicture != null
+                      ? NetworkImage(result.profilePicture!)
+                      : null,
                   radius: 28,
                   backgroundColor: const Color(0xFF3A3A3A),
-                  child:
-                      const Icon(Icons.person, color: Colors.white, size: 28),
+                  child: result.profilePicture == null
+                      ? const Icon(Icons.person, color: Colors.white, size: 28)
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -190,7 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E1E1E),
         elevation: 0,
@@ -228,6 +232,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
                 ),
+                fillColor: Colors.grey[900],
               ),
             ),
           ),

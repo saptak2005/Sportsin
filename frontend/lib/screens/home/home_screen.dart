@@ -5,6 +5,7 @@ import 'package:sportsin/screens/tournament/tournament_screen.dart';
 import 'package:sportsin/screens/profile/player_details.dart';
 import 'package:sportsin/screens/profile/recruiter_details.dart';
 import 'package:sportsin/services/db/db_provider.dart';
+import 'package:sportsin/config/theme/app_colors.dart';
 import '../../services/auth/auth_service.dart';
 import '../../components/custom_toast.dart';
 import '../../config/routes/route_names.dart';
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _pages = [
       FeedScreen(userId: DbProvider.instance.cashedUser?.id),
-      const NotificationScreen(),
+      const CampPostOpenningScreen(),
       const TournamentScreen(),
       DbProvider.instance.cashedUser?.role.value == 'player'
           ? const PlayerDetailsScreen()
@@ -93,25 +94,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: Colors.black,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Colors.blue, Colors.blueAccent],
+                  colors: [AppColors.linkedInBlueDark, AppColors.linkedInBlue],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.sports,
-                color: Colors.white,
-                size: 24,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/variant_1.jpg',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -158,14 +164,14 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 56,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Colors.blue, Colors.blueAccent, Colors.blue],
+            colors: [AppColors.linkedInBlueDark, AppColors.linkedInBlue, AppColors.linkedInBlueDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.4),
+              color: AppColors.linkedInBlue.withOpacity(0.4),
               spreadRadius: 4,
               blurRadius: 15,
               offset: const Offset(0, 4),
@@ -198,8 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF1E1E1E),
-              Color(0xFF2A2A2A),
+              Colors.black,
+              Colors.black,
             ],
           ),
           boxShadow: [
@@ -210,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
               spreadRadius: 2,
             ),
             BoxShadow(
-              color: Colors.blue.withOpacity(0.1),
+              color: AppColors.linkedInBlue.withOpacity(0.1),
               blurRadius: 15,
               offset: const Offset(0, -3),
             ),
@@ -218,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: BottomAppBar(
           height: 75,
-          color: Colors.transparent,
+          color: Colors.black,
           elevation: 0,
           shape: const CircularNotchedRectangle(),
           notchMargin: 10.0,
@@ -228,8 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(Icons.home_rounded, 'Feed', 0),
-                _buildNavItem(Icons.notifications_rounded, 'Notifications', 1),
-                const SizedBox(width: 50), // Space for the FAB
+                _buildNavItem(Icons.work_rounded, 'Opening', 1),
+                const SizedBox(width: 50),
                 _buildNavItem(Icons.sports_soccer, 'Tournament', 2),
                 _buildNavItem(Icons.person_rounded, 'Me', 3),
               ],
@@ -251,14 +257,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.blue : Colors.grey,
+              color: isSelected ? AppColors.linkedInBlue : Colors.white,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.blue : Colors.grey,
+                color: isSelected ? AppColors.linkedInBlue : Colors.white,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

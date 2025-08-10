@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sportsin/models/post.dart';
 import 'package:sportsin/services/db/db_provider.dart';
 import 'package:sportsin/utils/image_picker_util.dart';
+import 'package:sportsin/config/theme/app_colors.dart';
 
 import '../../components/custom_toast.dart';
 
@@ -127,9 +128,9 @@ class _PostCreationAndUpdateScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.darkSurface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
@@ -151,7 +152,7 @@ class _PostCreationAndUpdateScreenState
               child: Text(
                 isEditing ? 'Update' : 'Post',
                 style: const TextStyle(
-                  color: Colors.blue,
+                  color: AppColors.linkedInBlue,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -166,7 +167,7 @@ class _PostCreationAndUpdateScreenState
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.blue,
+                    color: AppColors.linkedInBlue,
                   ),
                 ),
               ),
@@ -201,29 +202,12 @@ class _PostCreationAndUpdateScreenState
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E1E1E),
-            Color(0xFF2A2A2A),
-            Color(0xFF1A1A1A),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
+          color: const Color(0xFF4A4A4A),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-            spreadRadius: 2,
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,12 +217,12 @@ class _PostCreationAndUpdateScreenState
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.linkedInBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.edit_note,
-                  color: Colors.blue,
+                  color: AppColors.linkedInBlue,
                   size: 24,
                 ),
               ),
@@ -256,10 +240,10 @@ class _PostCreationAndUpdateScreenState
           const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
-              borderRadius: BorderRadius.circular(16),
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.black,
                 width: 1,
               ),
             ),
@@ -272,6 +256,8 @@ class _PostCreationAndUpdateScreenState
               ),
               maxLines: 8,
               decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.black,
                 hintText:
                     'Share your thoughts, experiences, or opportunities...',
                 hintStyle: TextStyle(
@@ -300,19 +286,10 @@ class _PostCreationAndUpdateScreenState
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF1E1E1E),
-                  Color(0xFF2A2A2A),
-                  Color(0xFF1A1A1A),
-                ],
-                stops: [0.0, 0.5, 1.0],
-              ),
-              borderRadius: BorderRadius.circular(20),
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.grey.withOpacity(0.2),
+                color: const Color(0xFF4A4A4A),
                 width: 1,
               ),
             ),
@@ -323,12 +300,12 @@ class _PostCreationAndUpdateScreenState
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.linkedInGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         Icons.photo_library,
-                        color: Colors.green,
+                        color: AppColors.linkedInGreen,
                         size: 24,
                       ),
                     ),
@@ -351,10 +328,8 @@ class _PostCreationAndUpdateScreenState
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.blue, Colors.blueAccent],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
+                            color: AppColors.linkedInBlue,
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -421,13 +396,13 @@ class _PostCreationAndUpdateScreenState
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: replaceExistingImages
-                    ? Colors.red.withOpacity(0.2)
-                    : Colors.grey.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
+                    ? AppColors.linkedInBlue.withOpacity(0.1)
+                    : AppColors.darkSurfaceVariant,
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: replaceExistingImages
-                      ? Colors.red.withOpacity(0.5)
-                      : Colors.grey.withOpacity(0.3),
+                      ? AppColors.linkedInBlue
+                      : const Color(0xFF4A4A4A),
                   width: 1,
                 ),
               ),
@@ -442,7 +417,7 @@ class _PostCreationAndUpdateScreenState
                       });
                     },
                     fillColor: MaterialStateProperty.all(
-                      replaceExistingImages ? Colors.red : Colors.grey,
+                      replaceExistingImages ? AppColors.linkedInBlue : AppColors.darkSecondary,
                     ),
                     side: BorderSide.none,
                   ),
@@ -451,8 +426,9 @@ class _PostCreationAndUpdateScreenState
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color:
-                          replaceExistingImages ? Colors.red : Colors.grey[300],
+                      color: replaceExistingImages 
+                          ? AppColors.linkedInBlue 
+                          : AppColors.darkSecondary,
                     ),
                   ),
                 ],
@@ -477,8 +453,8 @@ class _PostCreationAndUpdateScreenState
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: replaceExistingImages
-                              ? Colors.red
-                              : Colors.grey.withOpacity(0.3),
+                              ? AppColors.linkedInBlue
+                              : const Color(0xFF4A4A4A),
                           width: 2,
                         ),
                       ),
@@ -493,11 +469,11 @@ class _PostCreationAndUpdateScreenState
                             return Container(
                               width: 100,
                               height: 100,
-                              color: const Color(0xFF3A3A3A),
-                              child: const Icon(
+                              color: AppColors.darkSurfaceVariant,
+                              child: Icon(
                                 Icons.broken_image,
                                 size: 30,
-                                color: Colors.grey,
+                                color: AppColors.darkSecondary,
                               ),
                             );
                           },
@@ -510,7 +486,7 @@ class _PostCreationAndUpdateScreenState
                         right: 4,
                         child: Container(
                           decoration: const BoxDecoration(
-                            color: Colors.red,
+                            color: AppColors.linkedInBlue,
                             shape: BoxShape.circle,
                           ),
                           padding: const EdgeInsets.all(4),
@@ -549,13 +525,13 @@ class _PostCreationAndUpdateScreenState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.linkedInGreen.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 '${selectedImages.length}',
                 style: const TextStyle(
-                  color: Colors.green,
+                  color: AppColors.linkedInGreen,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -576,9 +552,9 @@ class _PostCreationAndUpdateScreenState
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.green.withOpacity(0.5),
+                          color: AppColors.linkedInGreen,
                           width: 2,
                         ),
                       ),
@@ -599,7 +575,7 @@ class _PostCreationAndUpdateScreenState
                         onTap: () => _removeImage(index),
                         child: Container(
                           decoration: const BoxDecoration(
-                            color: Colors.red,
+                            color: AppColors.linkedInBlue,
                             shape: BoxShape.circle,
                           ),
                           padding: const EdgeInsets.all(4),

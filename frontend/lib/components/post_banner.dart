@@ -95,9 +95,10 @@ class _PostBannerState extends State<PostBanner> {
         Text(
           widget.post.content,
           style: const TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.w500,
+            fontSize: 15.0,
+            fontWeight: FontWeight.w400,
             color: Colors.white,
+            height: 1.5,
           ),
           maxLines: _isExpanded ? null : maxLines,
           overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
@@ -109,14 +110,14 @@ class _PostBannerState extends State<PostBanner> {
                 _isExpanded = true;
               });
             },
-            child: const Padding(
-              padding: EdgeInsets.only(top: 5.0),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
               child: Text(
-                'Show more',
+                'See more',
                 style: TextStyle(
                   fontSize: 14.0,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.linkedInBlue,
                 ),
               ),
             ),
@@ -128,14 +129,14 @@ class _PostBannerState extends State<PostBanner> {
                 _isExpanded = false;
               });
             },
-            child: const Padding(
-              padding: EdgeInsets.only(top: 5.0),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
               child: Text(
-                'Show less',
+                'See less',
                 style: TextStyle(
                   fontSize: 14.0,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.darkSecondary,
                 ),
               ),
             ),
@@ -150,276 +151,246 @@ class _PostBannerState extends State<PostBanner> {
         .format(DateTime.parse(widget.post.createdAt));
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 0.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0.0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20.0),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E1E1E),
-            Color(0xFF2A2A2A),
-            Color(0xFF1A1A1A),
-          ],
-          stops: [0.0, 0.5, 1.0],
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: AppColors.darkSurfaceVariant,
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: AppColors.linkedInBlue.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20.0),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Enhanced User Info Section
-              _buildUserHeader(formattedDate),
-              const SizedBox(height: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Professional User Header
+            _buildUserHeader(formattedDate),
+            const SizedBox(height: 16),
 
-              // Post Content with better styling
-              _buildPostContent(),
+            // Post Content
+            _buildPostContent(),
 
-              // Post Images with improved layout
-              if (widget.post.images.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                _buildImageGallery(),
-              ],
-
-              // Enhanced Tags Section
-              if (widget.post.tags.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _buildTagsSection(),
-              ],
-              const SizedBox(height: 20),
-              _buildEngagementStats(),
+            // Post Images
+            if (widget.post.images.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildActionButtons(context),
+              _buildImageGallery(),
             ],
-          ),
+
+            // Tags Section
+            if (widget.post.tags.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildTagsSection(),
+            ],
+            
+            const SizedBox(height: 16),
+            _buildEngagementStats(),
+            const SizedBox(height: 12),
+            _buildActionButtons(context),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildUserHeader(String formattedDate) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Stack(
+    return Row(
+      children: [
+        _isLoadingAuthor
+            ? const CircleAvatar(
+                radius: 24.0,
+                backgroundColor: Colors.black,
+                child: Icon(Icons.person, size: 24, color: Colors.red),
+              )
+            : (_postAuthor?.profilePicture != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(24.0),
+                    child: CachedNetworkImage(
+                      imageUrl: _postAuthor!.profilePicture!,
+                      width: 48.0,
+                      height: 48.0,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const CircleAvatar(
+                        radius: 24.0,
+                        backgroundColor: Colors.black,
+                        child: Icon(Icons.person, size: 24, color: Colors.red),
+                      ),
+                      errorWidget: (context, url, error) => const CircleAvatar(
+                        radius: 24.0,
+                        backgroundColor: Colors.black,
+                        child: Icon(Icons.person, size: 24, color: Colors.red),
+                      ),
+                    ),
+                  )
+                : const CircleAvatar(
+                    radius: 24.0,
+                    backgroundColor: AppColors.darkSurfaceVariant,
+                    child: Icon(Icons.person, size: 24, color: AppColors.darkSecondary),
+                  )),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
+              Text(
+                _isLoadingAuthor
+                    ? 'Loading...'
+                    : (_postAuthor != null
+                        ? '${_postAuthor?.userName}'
+                        : 'Unknown User'),
+                style: const TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
-                child: _isLoadingAuthor
-                    ? const CircleAvatar(
-                        radius: 28.0,
-                        backgroundColor: Color(0xFF3A3A3A),
-                        child:
-                            Icon(Icons.person, size: 28, color: Colors.white),
-                      )
-                    : (_postAuthor?.profilePicture != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(28.0),
-                            child: CachedNetworkImage(
-                              imageUrl: _postAuthor!.profilePicture!,
-                              width: 56.0,
-                              height: 56.0,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const CircleAvatar(
-                                radius: 28.0,
-                                backgroundColor: Color(0xFF3A3A3A),
-                                child: Icon(Icons.person,
-                                    size: 28, color: Colors.white),
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  const CircleAvatar(
-                                radius: 28.0,
-                                backgroundColor: Color(0xFF3A3A3A),
-                                child: Icon(Icons.person,
-                                    size: 28, color: Colors.white),
-                              ),
-                            ),
-                          )
-                        : const CircleAvatar(
-                            radius: 28.0,
-                            backgroundColor: Color(0xFF3A3A3A),
-                            child: Icon(Icons.person,
-                                size: 28, color: Colors.white),
-                          )),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                formattedDate,
+                style: const TextStyle(
+                  fontSize: 14.0,
+                  color: AppColors.darkSecondary,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isLoadingAuthor
-                      ? 'Loading...'
-                      : (_postAuthor != null
-                          ? '${_postAuthor?.userName}'
-                          : 'Unknown User'),
-                  style: const TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      formattedDate,
-                      style: const TextStyle(
-                        fontSize: 13.0,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _buildPostMenu(),
-        ],
-      ),
+        ),
+        _buildPostMenu(),
+      ],
     );
   }
 
   Widget _buildPostMenu() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF3A3A3A),
-        borderRadius: BorderRadius.circular(12),
+    return IconButton(
+      icon: const Icon(
+        Icons.more_horiz,
+        color: AppColors.darkSecondary,
+        size: 24,
       ),
-      child: PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert, color: Colors.white),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        color: const Color(0xFF2A2A2A),
-        onSelected: (value) async {
-          if (value == 'Edit') {
-            final result = await context.pushNamed(
-              RouteNames.postCreation,
-              extra: widget.post,
-            );
-
-            if (result == true) {
-              widget.onEdit();
-            }
-          } else if (value == 'Delete') {
-            try {
-              await DbProvider.instance.deletePost(widget.post.id);
-              widget.onDelete();
-              CustomToast.showSuccess(message: 'Post deleted successfully');
-            } catch (e) {
-              debugPrint('Failed to delete post: $e');
-              CustomToast.showError(
-                  message: 'Failed to delete post: ${e.toString()}');
-            }
-          }
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 'Edit',
-            child: Row(
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: AppColors.darkSurface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          builder: (context) => Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.edit_outlined, color: Colors.grey[300], size: 20),
-                const SizedBox(width: 12),
-                Text(
-                  'Edit Post',
-                  style: TextStyle(color: Colors.grey[300]),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkSurfaceVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.darkSecondary,
+                  ),
+                  title: const Text(
+                    'Edit Post',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final result = await context.pushNamed(
+                      RouteNames.postCreation,
+                      extra: widget.post,
+                    );
+                    if (result == true) {
+                      widget.onEdit();
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                  ),
+                  title: const Text(
+                    'Delete Post',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    try {
+                      await DbProvider.instance.deletePost(widget.post.id);
+                      widget.onDelete();
+                      CustomToast.showSuccess(message: 'Post deleted successfully');
+                    } catch (e) {
+                      debugPrint('Failed to delete post: $e');
+                      CustomToast.showError(
+                          message: 'Failed to delete post: ${e.toString()}');
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
-          const PopupMenuItem(
-            value: 'Delete',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                SizedBox(width: 12),
-                Text(
-                  'Delete Post',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildImageGallery() {
     if (widget.post.images.length == 1) {
-      // Single image - full width
+      // Single image - clean, simple design
       return ClipRRect(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(8.0),
         child: CachedNetworkImage(
           imageUrl: widget.post.images[0].imageUrl,
           fit: BoxFit.cover,
           width: double.infinity,
-          height: 250.0,
+          height: 300.0,
           placeholder: (context, url) => Container(
-            height: 250,
-            decoration: BoxDecoration(
-              color: const Color(0xFF3A3A3A),
-              borderRadius: BorderRadius.circular(16),
-            ),
+            height: 300,
+            color: AppColors.darkSurfaceVariant,
             child: const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+              child: CircularProgressIndicator(
+                color: AppColors.linkedInBlue,
+                strokeWidth: 2,
+              ),
             ),
           ),
           errorWidget: (context, url, error) => Container(
-            height: 250,
-            decoration: BoxDecoration(
-              color: const Color(0xFF3A3A3A),
-              borderRadius: BorderRadius.circular(16),
-            ),
+            height: 300,
+            color: AppColors.darkSurfaceVariant,
             child: const Center(
               child: Icon(
                 Icons.broken_image_outlined,
-                size: 60,
-                color: Colors.grey,
+                size: 50,
+                color: AppColors.darkSecondary,
               ),
             ),
           ),
         ),
       );
     } else {
-      // Multiple images - horizontal scroll
+      // Multiple images - simple horizontal scroll
       return SizedBox(
-        height: 220.0,
+        height: 250.0,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: widget.post.images.length,
@@ -427,36 +398,33 @@ class _PostBannerState extends State<PostBanner> {
             final image = widget.post.images[index];
             return Container(
               margin: EdgeInsets.only(
-                right: index < widget.post.images.length - 1 ? 12.0 : 0,
+                right: index < widget.post.images.length - 1 ? 8.0 : 0,
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(8.0),
                 child: CachedNetworkImage(
                   imageUrl: image.imageUrl,
                   fit: BoxFit.cover,
                   width: 200.0,
-                  height: 220.0,
+                  height: 250.0,
                   placeholder: (context, url) => Container(
                     width: 200,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3A3A3A),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    color: AppColors.darkSurfaceVariant,
                     child: const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
+                      child: CircularProgressIndicator(
+                        color: AppColors.linkedInBlue,
+                        strokeWidth: 2,
+                      ),
                     ),
                   ),
                   errorWidget: (context, url, error) => Container(
                     width: 200,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3A3A3A),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    color: AppColors.darkSurfaceVariant,
                     child: const Center(
                       child: Icon(
                         Icons.broken_image_outlined,
-                        size: 50,
-                        color: Colors.grey,
+                        size: 40,
+                        color: AppColors.darkSecondary,
                       ),
                     ),
                   ),
@@ -477,27 +445,19 @@ class _PostBannerState extends State<PostBanner> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.linkedInBlue.withOpacity(0.8),
-                AppColors.linkedInBlue,
-              ],
-            ),
+            color: AppColors.darkSurfaceVariant,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.linkedInBlue.withOpacity(0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(
+              color: AppColors.darkBackground,
+              width: 1,
+            ),
           ),
           child: Text(
             '#$tag',
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+              color: AppColors.linkedInBlue,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
           ),
         );
@@ -507,69 +467,40 @@ class _PostBannerState extends State<PostBanner> {
 
   Widget _buildEngagementStats() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Color(0xFF4A4A4A), width: 1),
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(
-                _isLiked ? Icons.favorite : Icons.favorite_border,
-                size: 16,
-                color: Colors.red[400],
+          if (_likeCount > 0) ...[
+            Icon(
+              Icons.thumb_up,
+              size: 16,
+              color: AppColors.linkedInBlue,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '$_likeCount',
+              style: const TextStyle(
+                fontSize: 14.0,
+                color: AppColors.darkSecondary,
+                fontWeight: FontWeight.w400,
               ),
-              const SizedBox(width: 6),
-              Text(
-                '$_likeCount Likes',
-                style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+            ),
+          ],
+          const Spacer(),
+          if (widget.post.commentCount > 0)
+            Text(
+              '${widget.post.commentCount} comments',
+              style: const TextStyle(
+                fontSize: 14.0,
+                color: AppColors.darkSecondary,
+                fontWeight: FontWeight.w400,
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Icon(
-                Icons.chat_bubble_outline,
-                size: 16,
-                color: Colors.blue[400],
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${widget.post.commentCount} Comments',
-                style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Icon(
-                Icons.share,
-                size: 16,
-                color: Colors.green[400],
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                '5 Shares',
-                style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -580,28 +511,26 @@ class _PostBannerState extends State<PostBanner> {
       children: [
         Expanded(
           child: _buildActionButton(
-            _isLiked ? Icons.thumb_up_alt : Icons.thumb_up_outlined,
+            _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
             'Like',
             _handleLike,
-            _isLiked ? Colors.red : Colors.grey,
+            _isLiked ? AppColors.linkedInBlue : AppColors.darkSecondary,
           ),
         ),
-        const SizedBox(width: 8),
         Expanded(
           child: _buildActionButton(
-            Icons.chat_bubble_outline,
+            Icons.comment_outlined,
             'Comment',
             widget.onComment,
-            Colors.blue,
+            AppColors.darkSecondary,
           ),
         ),
-        const SizedBox(width: 8),
         Expanded(
           child: _buildActionButton(
             Icons.share_outlined,
             'Share',
             widget.onShare,
-            Colors.green,
+            AppColors.darkSecondary,
           ),
         ),
       ],
@@ -609,35 +538,28 @@ class _PostBannerState extends State<PostBanner> {
   }
 
   Widget _buildActionButton(
-      IconData icon, String label, VoidCallback onPressed, Color accentColor) {
+      IconData icon, String label, VoidCallback onPressed, Color color) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: onPressed,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2A2A2A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.grey.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Column(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 3),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                color: accentColor,
-                size: 22,
+                color: color,
+                size: 20,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.grey[300],
-                  fontSize: 12,
+                  color: color,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),

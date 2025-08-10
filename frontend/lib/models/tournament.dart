@@ -1,4 +1,5 @@
 import 'app_model.dart';
+import 'sport.dart';
 import 'enums.dart';
 
 class Tournament extends AppModel {
@@ -172,5 +173,68 @@ class Tournament extends AppModel {
   @override
   String toString() {
     return 'Tournament(id: $id, title: $title, location: $location, status: $status)';
+  }
+}
+
+class TournamentDetails {
+  final Tournament tournament;
+  final String hostName;
+  final Sport? sport;
+  final bool isEnrolled;
+  final int participantsCount;
+  final ParticipationStatus? participationStatus;
+
+  TournamentDetails({
+    required this.tournament,
+    required this.hostName,
+    this.sport,
+    required this.isEnrolled,
+    required this.participantsCount,
+    this.participationStatus,
+  });
+
+  factory TournamentDetails.fromJson(Map<String, dynamic> json) {
+    return TournamentDetails(
+      tournament:
+          Tournament.fromJson(json['tournament'] as Map<String, dynamic>),
+      hostName: json['host_name'] as String,
+      sport: json['sport'] != null
+          ? Sport.fromJson(json['sport'] as Map<String, dynamic>)
+          : null,
+      isEnrolled: json['is_enrolled'] as bool,
+      participantsCount: json['participants_count'] as int,
+      participationStatus: json['participation_status'] != null
+          ? ParticipationStatus.fromJson(json['participation_status'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tournament': tournament.toJson(),
+      'host_name': hostName,
+      'sport': sport?.toJson(),
+      'is_enrolled': isEnrolled,
+      'participants_count': participantsCount,
+      'participation_status': participationStatus?.toJson(),
+    };
+  }
+
+  TournamentDetails copyWith({
+    Tournament? tournament,
+    String? hostName,
+    Sport? sport,
+    bool? isEnrolled,
+    int? participantsCount,
+    ParticipationStatus? participationStatus,
+  }) {
+    return TournamentDetails(
+      tournament: tournament ?? this.tournament,
+      hostName: hostName ?? this.hostName,
+      sport: sport ?? this.sport,
+      isEnrolled: isEnrolled ?? this.isEnrolled,
+      participantsCount: participantsCount ?? this.participantsCount,
+      participationStatus: participationStatus ?? this.participationStatus,
+    );
   }
 }

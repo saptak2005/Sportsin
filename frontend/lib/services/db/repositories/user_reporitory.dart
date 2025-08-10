@@ -208,7 +208,10 @@ class UserRepository {
 
       final response = await DioClient.instance.get('profile/$uid');
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
+        if (response.data == null) {
+          return null;
+        }
         final profileData = response.data['profile'];
         if (profileData == null) {
           return null;
@@ -254,20 +257,27 @@ class UserRepository {
     }
   }
 
-  Future<String> getMyReferralCode() async {
+  Future<String?> getMyReferralCode() async {
     try {
       final response = await DioClient.instance.get('/profile/referal');
 
-      final responseData = response.data as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData == null) {
+          return null;
+        }
 
-      final String? code = responseData['referal_code'] as String?;
+        final String? code = responseData['referal_code'];
 
-      if (code != null && code.isNotEmpty) {
-        return code;
+        if (code != null && code.isNotEmpty) {
+          return code;
+        } else {
+          return null;
+        }
       } else {
         throw DbExceptions(
-          message: 'Failed to retrieve referral code',
-          details: 'Server response did not contain a valid code.',
+          message: 'Failed to fetch referral code',
+          details: 'Unexpected response status: ${response.statusCode}',
         );
       }
     } on DioException catch (e) {

@@ -201,7 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -216,20 +216,21 @@ class _RegisterScreenState extends State<RegisterScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 30),
-                      // Back Button
+                      // Logo
                       Center(
                         child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).colorScheme.primaryContainer,
+                          width: 120,
+                          height: 120,
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.sports,
-                            size: 50,
-                            color: Theme.of(context).colorScheme.primary,
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/variant_1.jpg',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
@@ -248,9 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                       Text(
                         'Please fill in the details to register',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              color: Colors.white,
                             ),
                       ),
 
@@ -277,10 +276,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                             });
                           },
                           style: SegmentedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.surface,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onSurface,
+                            backgroundColor: Colors.grey[900],
+                            foregroundColor: Colors.white,
                             selectedForegroundColor: Colors.white,
                             selectedBackgroundColor: AppColors.linkedInBlue,
                             side: const BorderSide(

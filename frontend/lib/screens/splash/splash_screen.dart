@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sportsin/config/routes/route_names.dart';
+import 'package:sportsin/config/theme/app_colors.dart';
 import 'package:sportsin/services/auth/auth_service.dart';
 import 'package:sportsin/services/db/db_provider.dart';
 import 'package:sportsin/services/notification/fcm_service.dart';
@@ -85,42 +86,64 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Logo Container
             Container(
               width: 120,
               height: 120,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade100,
-                borderRadius: BorderRadius.circular(60),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.sports,
-                size: 60,
-                color: Colors.blue.shade700,
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/variant_1.jpg',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
 
             // App Name
             Text(
               'SportsIN',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
+                    color: AppColors.linkedInBlue,
+                    letterSpacing: 1.2,
                   ),
             ),
-            const SizedBox(height: 10),
-
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
 
             Text(
-              'Initializing...',
+              'Recruit • Showcase • Excel',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 40),
+
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppColors.linkedInBlue),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            Text(
+              'Loading your sports world...',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.darkSecondary,
+                    fontWeight: FontWeight.w400,
                   ),
             ),
           ],

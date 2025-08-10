@@ -108,6 +108,9 @@ class CommentRepository {
         },
       );
       if (response.statusCode == 200) {
+        if (response.data == null) {
+          return [];
+        }
         return (response.data as List)
             .map((comment) => CommentResponse.fromJson(comment))
             .toList();
@@ -149,6 +152,9 @@ class CommentRepository {
         },
       );
       if (response.statusCode == 200) {
+        if (response.data == null) {
+          return null;
+        }
         return CommentResponse.fromJson(response.data);
       } else {
         throw DbExceptions(

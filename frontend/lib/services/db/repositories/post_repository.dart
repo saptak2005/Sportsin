@@ -136,10 +136,12 @@ class PostRepository {
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final postsData = response.data;
+        if (postsData == null) {
+          return [];
+        }
 
-        // Ensure postsData is a List and cast it properly
         if (postsData is List) {
           final List<Post> posts = postsData
               .where((e) => e != null && e is Map<String, dynamic>)
@@ -183,8 +185,11 @@ class PostRepository {
 
       final response = await DioClient.instance.get('posts/$postId');
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final postData = response.data;
+        if (postData == null) {
+          return null;
+        }
 
         if (postData is Map<String, dynamic>) {
           final post = Post.fromJson(postData);
@@ -243,8 +248,11 @@ class PostRepository {
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final dynamic responseData = response.data;
+        if (responseData == null) {
+          return [];
+        }
         List<dynamic> postsList;
         if (responseData is List) {
           postsList = responseData;
@@ -298,13 +306,11 @@ class PostRepository {
         );
       }
 
-      // Use FormData for multipart/form-data
       final formData = FormData();
 
       formData.fields.add(MapEntry('content', post.content.trim()));
 
       if (post.tags.isNotEmpty) {
-        // Backend expects comma-separated tags
         formData.fields.add(MapEntry('tags', post.tags.join(',')));
       }
 

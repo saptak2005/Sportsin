@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sportsin/models/post.dart';
+import 'package:sportsin/models/camp_openning.dart';
 import 'package:sportsin/screens/complete_update_profile/complete_or_update_profile_screen.dart';
 import 'package:sportsin/screens/home/home_screen.dart';
 import 'package:sportsin/screens/posts/post_creation_update_screen.dart';
-import 'package:sportsin/screens/posts/tournament_creation_screen.dart';
-import 'package:sportsin/screens/posts/opening_creation_screen.dart';
+import 'package:sportsin/screens/tournament/tournament_creation_screen.dart';
+import 'package:sportsin/screens/opening/opening_creation_screen.dart';
+import 'package:sportsin/screens/opening/opening_applicants_screen.dart';
+import 'package:sportsin/screens/opening/opening_details_screen.dart';
 import 'package:sportsin/screens/profile/player_details.dart';
 import 'package:sportsin/screens/profile/recruiter_details.dart';
 import 'package:sportsin/screens/splash/splash_screen.dart';
@@ -154,6 +157,32 @@ class AppRouter {
             path: RouteNames.jobCreationPath,
             name: RouteNames.jobCreation,
             builder: (context, state) => const OpeningCreationScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.openingApplicantsPath,
+            name: RouteNames.openingApplicants,
+            builder: (context, state) {
+              final openingId = state.uri.queryParameters['openingId'] ?? '';
+              final openingTitle =
+                  state.uri.queryParameters['openingTitle'] ?? '';
+              return OpeningApplicantsScreen(
+                openingId: openingId,
+                openingTitle: openingTitle,
+              );
+            },
+          ),
+          GoRoute(
+            path: RouteNames.openingDetailsPath,
+            name: RouteNames.openingDetails,
+            builder: (context, state) {
+              final opening = state.extra as CampOpenning?;
+              if (opening == null) {
+                return const Scaffold(
+                  body: Center(child: Text('Opening not found')),
+                );
+              }
+              return OpeningDetailsScreen(opening: opening);
+            },
           ),
         ],
       ),

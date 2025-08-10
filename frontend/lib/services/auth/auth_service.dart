@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sportsin/services/auth/auth_provider.dart';
 import 'package:sportsin/services/auth/auth_user.dart';
 import 'package:sportsin/services/auth/custom_auth_provider.dart';
+import 'package:sportsin/services/notification/fcm_service.dart';
 
 class AuthService implements AuthProvider {
   final AuthProvider provider;
@@ -65,11 +66,30 @@ class AuthService implements AuthProvider {
       password: password,
     );
     _authStateNotifier.value = user;
+
+    // Send FCM token after successful login
+    try {
+      await FcmService.instance.onUserLogin();
+      debugPrint("✅ FCM token registered after login.");
+    } catch (e) {
+      debugPrint("⚠️ Failed to register FCM token after login: $e");
+      // Don't throw error to avoid blocking login flow
+    }
+
     return user;
   }
 
   @override
   Future<void> signOut() async {
+    // Clean up FCM token before logout
+    try {
+      await FcmService.instance.onUserLogout();
+      debugPrint("✅ FCM token removed from server before logout.");
+    } catch (e) {
+      debugPrint("⚠️ Failed to remove FCM token before logout: $e");
+      // Don't throw error to avoid blocking logout flow
+    }
+
     await provider.signOut();
     _authStateNotifier.value = null;
   }
@@ -85,6 +105,16 @@ class AuthService implements AuthProvider {
   Future<AuthUser> signInWithGoogle() async {
     final user = await provider.signInWithGoogle();
     _authStateNotifier.value = user;
+
+    // Send FCM token after successful Google sign-in
+    try {
+      await FcmService.instance.onUserLogin();
+      debugPrint("✅ FCM token registered after Google sign-in.");
+    } catch (e) {
+      debugPrint("⚠️ Failed to register FCM token after Google sign-in: $e");
+      // Don't throw error to avoid blocking login flow
+    }
+
     return user;
   }
 
@@ -98,6 +128,15 @@ class AuthService implements AuthProvider {
     if (user != null) {
       debugPrint(
           '✅ AuthService: Auth state refreshed - User: ${user.email}, Role: ${user.role.value}');
+
+      // Send FCM token if user is authenticated after refresh
+      try {
+        await FcmService.instance.onUserLogin();
+        debugPrint("✅ FCM token registered after auth state refresh.");
+      } catch (e) {
+        debugPrint("⚠️ Failed to register FCM token after auth refresh: $e");
+        // Don't throw error to avoid blocking refresh flow
+      }
     } else {
       debugPrint('❌ AuthService: No user found during auth state refresh');
     }
@@ -113,6 +152,17 @@ class AuthService implements AuthProvider {
       code: code,
     );
     _authStateNotifier.value = user;
+
+    // Send FCM token after successful email verification (login)
+    try {
+      await FcmService.instance.onUserLogin();
+      debugPrint("✅ FCM token registered after email verification.");
+    } catch (e) {
+      debugPrint(
+          "⚠️ Failed to register FCM token after email verification: $e");
+      // Don't throw error to avoid blocking verification flow
+    }
+
     return user;
   }
 

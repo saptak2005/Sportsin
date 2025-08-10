@@ -8,8 +8,13 @@ import 'package:sportsin/services/db/db_provider.dart';
 import 'package:sportsin/components/custom_toast.dart';
 
 class FeedScreen extends StatefulWidget {
+  final bool fromProfileScreen;
   final String? userId;
-  const FeedScreen({super.key, this.userId});
+  const FeedScreen({
+    super.key,
+    this.userId,
+    this.fromProfileScreen = false,
+  });
 
   @override
   State<FeedScreen> createState() => _FeedScreenState();
@@ -79,10 +84,15 @@ class _FeedScreenState extends State<FeedScreen> {
     });
 
     try {
-      final posts = await DbProvider.instance.getPostWithPagination(
-        limit: _limit,
-        offset: 0,
-      );
+      final posts = widget.fromProfileScreen
+          ? await DbProvider.instance.getMyPosts(
+              limit: _limit,
+              offset: 0,
+            )
+          : await DbProvider.instance.getPostWithPagination(
+              limit: _limit,
+              offset: 0,
+            );
 
       setState(() {
         _posts = posts;
@@ -233,16 +243,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
                             // Reverse the order of posts
                             final post = _posts[_posts.length - 1 - index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 2.0),
-                              child: PostBanner(
-                                post: post,
-                                onLike: (isLiked) => _onLike(post, isLiked),
-                                onComment: () => _onComment(post),
-                                onShare: () => _onShare(post),
-                                onEdit: () => _onEditPost(post),
-                                onDelete: () => _onDeletePost(post),
-                              ),
+                            return PostBanner(
+                              post: post,
+                              onLike: (isLiked) => _onLike(post, isLiked),
+                              onComment: () => _onComment(post),
+                              onShare: () => _onShare(post),
+                              onEdit: () => _onEditPost(post),
+                              onDelete: () => _onDeletePost(post),
                             );
                           },
                         ),

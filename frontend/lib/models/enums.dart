@@ -92,6 +92,30 @@ enum ParticipationStatus {
   String toJson() => value;
 }
 
+// ApplicationStatusPending   ApplicationStatus = "pending"
+// ApplicationStatusAccepted  ApplicationStatus = "accepted"
+// ApplicationStatusRejected  ApplicationStatus = "rejected"
+// ApplicationStatusWithdrawn ApplicationStatus = "withdrawn"
+
+enum ApplicationStatus {
+  pending('pending'),
+  accepted('accepted'),
+  rejected('rejected'),
+  withdrawn('withdrawn');
+
+  const ApplicationStatus(this.value);
+  final String value;
+
+  factory ApplicationStatus.fromJson(String value) {
+    return ApplicationStatus.values.firstWhere(
+      (status) => status.value == value,
+      orElse: () => ApplicationStatus.pending,
+    );
+  }
+
+  String toJson() => value;
+}
+
 enum OpeningStatus {
   open('open'),
   closed('closed');

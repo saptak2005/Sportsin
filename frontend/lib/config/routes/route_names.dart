@@ -20,6 +20,8 @@ class RouteNames {
   static const String jobCreation = 'job-creation';
   static const String achievementCreation = 'achievement-creation';
   static const String tournament = 'tournament';
+  static const String openingApplicants = 'opening-applicants';
+  static const String openingDetails = 'opening-details';
 
   // Paths
   static const String loginPath = '/login';
@@ -42,4 +44,6 @@ class RouteNames {
   static const String notificationsPath = '/notifications';
   static const String tournamentPath = '/tournament';
   static const String tournamentDetailsPath = '/tournament-details';
+  static const String openingApplicantsPath = '/opening-applicants';
+  static const String openingDetailsPath = '/opening-details';
 }

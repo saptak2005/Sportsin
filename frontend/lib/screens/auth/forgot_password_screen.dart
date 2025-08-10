@@ -127,7 +127,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -145,17 +145,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                       // Logo or App Icon
                       Center(
                         child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).colorScheme.primaryContainer,
+                          width: 120,
+                          height: 120,
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.lock_reset,
-                            size: 50,
-                            color: Theme.of(context).colorScheme.primary,
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/variant_1.jpg',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
@@ -174,9 +175,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                       Text(
                         'Enter your email address and we\'ll send you a code to reset your password.',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              color: Colors.white,
                             ),
                       ),
                       const SizedBox(height: 40),

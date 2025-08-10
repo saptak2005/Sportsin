@@ -1,10 +1,10 @@
-import 'app_model.dart';
-import 'enums.dart';
+import 'package:sportsin/models/models.dart';
 
 class TournamentParticipants extends AppModel {
   final String userId;
   final String tournamentId;
   final ParticipationStatus status;
+  final User? user;
 
   TournamentParticipants({
     required super.id,
@@ -13,6 +13,7 @@ class TournamentParticipants extends AppModel {
     required this.userId,
     required this.tournamentId,
     required this.status,
+    this.user,
   });
 
   factory TournamentParticipants.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,9 @@ class TournamentParticipants extends AppModel {
       userId: json['user_id'] as String,
       tournamentId: json['tournament_id'] as String,
       status: ParticipationStatus.fromJson(json['status'] as String),
+      user: json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -33,6 +37,7 @@ class TournamentParticipants extends AppModel {
       'user_id': userId,
       'tournament_id': tournamentId,
       'status': status.toJson(),
+      'user': user?.toJson(),
     });
     return json;
   }
@@ -44,6 +49,7 @@ class TournamentParticipants extends AppModel {
     String? userId,
     String? tournamentId,
     ParticipationStatus? status,
+    User? user,
   }) {
     return TournamentParticipants(
       id: id ?? this.id,
@@ -52,6 +58,7 @@ class TournamentParticipants extends AppModel {
       userId: userId ?? this.userId,
       tournamentId: tournamentId ?? this.tournamentId,
       status: status ?? this.status,
+      user: user ?? this.user,
     );
   }
 
@@ -62,7 +69,8 @@ class TournamentParticipants extends AppModel {
         super == other &&
         other.userId == userId &&
         other.tournamentId == tournamentId &&
-        other.status == status;
+        other.status == status &&
+        other.user == user;
   }
 
   @override
@@ -72,6 +80,7 @@ class TournamentParticipants extends AppModel {
       userId,
       tournamentId,
       status,
+      user,
     );
   }
 

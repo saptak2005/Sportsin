@@ -170,7 +170,10 @@ class _RecruiterDetailsScreenState extends State<RecruiterDetailsScreen> {
           // User's Posts Feed
           SizedBox(
             height: 400, // Fixed height for the posts section
-            child: FeedScreen(userId: recruiter.id),
+            child: FeedScreen(
+              userId: recruiter.id,
+              fromProfileScreen: true,
+            ),
           ),
         ],
       ),

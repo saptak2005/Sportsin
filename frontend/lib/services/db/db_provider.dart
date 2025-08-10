@@ -1,26 +1,7 @@
 import 'dart:io';
-
-import 'package:sportsin/models/achievement.dart';
-import 'package:sportsin/models/camp_openning.dart';
-import 'package:sportsin/models/chat_message.dart';
-import 'package:sportsin/models/chat_room.dart';
-import 'package:sportsin/models/comment_model.dart';
-import 'package:sportsin/models/enums.dart';
-import 'package:sportsin/models/post.dart';
-import 'package:sportsin/models/tournament.dart';
-import 'package:sportsin/models/tournament_participants.dart';
-import 'package:sportsin/models/user.dart';
-import 'package:sportsin/models/user_search_result.dart';
+import 'package:sportsin/models/models.dart';
 import 'package:sportsin/services/db/db_model.dart';
-import 'package:sportsin/services/db/repositories/chat_repository.dart';
-import 'package:sportsin/services/db/repositories/comment_repository.dart';
-import 'package:sportsin/services/db/repositories/like_repository.dart';
-import 'package:sportsin/services/db/repositories/search_repository.dart';
-import 'package:sportsin/services/db/repositories/user_reporitory.dart';
-import 'package:sportsin/services/db/repositories/post_repository.dart';
-import 'package:sportsin/services/db/repositories/tournament_repository.dart';
-import 'package:sportsin/services/db/repositories/acheivement_repository.dart';
-import 'package:sportsin/services/db/repositories/camp_opening_repository.dart';
+import 'repositories/repository_model.dart';
 
 class DbProvider implements DbModel {
   static DbProvider? _instance;
@@ -36,6 +17,7 @@ class DbProvider implements DbModel {
   late final ChatRepository _chatRepository;
   late final CampOpeningRepository _campOpeningRepository;
   late final SearchRepository _searchRepository;
+  late final SportsRepository _sportsRepository;
 
   DbProvider._() {
     _userRepository = UserRepository.instance;
@@ -47,6 +29,7 @@ class DbProvider implements DbModel {
     _chatRepository = ChatRepository.instance;
     _campOpeningRepository = CampOpeningRepository.instance;
     _searchRepository = SearchRepository.instance;
+    _sportsRepository = SportsRepository.instance;
   }
 
   static DbProvider get instance {
@@ -197,7 +180,7 @@ class DbProvider implements DbModel {
   }
 
   @override
-  Future<List<Tournament>> getTournaments(
+  Future<List<TournamentDetails>> getTournaments(
       {String? hostId,
       String? sportId,
       String? status,
@@ -396,7 +379,7 @@ class DbProvider implements DbModel {
   }
 
   @override
-  Future<List> getOpeningApplicants(String openingId) async {
+  Future<List<ApplicantResponse>> getOpeningApplicants(String openingId) async {
     return await _campOpeningRepository.getOpeningApplicants(openingId);
   }
 
@@ -410,29 +393,36 @@ class DbProvider implements DbModel {
       {int? limit,
       int? offset,
       String? recruiterId,
-      String? sportId,
+      String? sportName,
       String? country,
       bool? applied}) async {
     return await _campOpeningRepository.getOpenings(
       limit: limit,
       offset: offset,
       recruiterId: recruiterId,
-      sportId: sportId,
+      sportName: sportName,
       country: country,
       applied: applied,
     );
   }
 
+  Future<void> acceptApplication(
+      {required String openingId, required String applicantId}) async {
+    return await _campOpeningRepository.acceptApplication(
+        openingId, applicantId);
+  }
+
+  Future<void> rejectApplication(
+      {required String openingId, required String applicationId}) async {
+    return await _campOpeningRepository.rejectApplication(
+        openingId, applicationId);
+  }
+
   @override
-  Future<void> updateApplicationStatus(
-      {required String openingId,
-      required String applicationId,
-      required OpeningStatus status}) async {
-    return await _campOpeningRepository.updateApplicationStatus(
-      openingId: openingId,
-      applicationId: applicationId,
-      status: status,
-    );
+  Future<void> withdrawApplication(
+      String openingId, String applicationId) async {
+    return await _campOpeningRepository.withdrawApplication(
+        openingId, applicationId);
   }
 
   @override
@@ -450,19 +440,54 @@ class DbProvider implements DbModel {
   }
 
   @override
-  Future<void> withdrawApplication(
-      String openingId, String applicationId) async {
-    return await _campOpeningRepository.withdrawApplication(
-        openingId, applicationId);
-  }
-
-  @override
-  Future<String> getMyReferralCode() async {
+  Future<String?> getMyReferralCode() async {
     return await _userRepository.getMyReferralCode();
   }
 
   @override
   Future<List<UserSearchResult>> searchUsers(String query) async {
     return await _searchRepository.searchUsers(query);
+  }
+
+  @override
+  Future<Sport> createSport({required String name, String? description}) async {
+    return await _sportsRepository.createSport(
+        name: name, description: description);
+  }
+
+  @override
+  Future<Sport?> getSportByName(String name) async {
+    return await _sportsRepository.getSportByName(name);
+  }
+
+  @override
+  Future<List<Sport>> getSports({int? limit, int? offset}) async {
+    return await _sportsRepository.getSports(limit: limit, offset: offset);
+  }
+
+  @override
+  Future<void> bulkUpdateParticipantStatus(
+      {required String tournamentId,
+      required List<Map<String, String>> participantUpdates}) async {
+    return await _tournamentRepository.bulkUpdateParticipantStatus(
+      tournamentId: tournamentId,
+      participantUpdates: participantUpdates,
+    );
+  }
+
+  @override
+  Future<List<TournamentParticipants>> getTournamentParticipantsWithDetails(
+      String tournamentId,
+      {String? status}) async {
+    return await _tournamentRepository.getTournamentParticipantsWithDetails(
+      tournamentId,
+      status: status,
+    );
+  }
+
+  @override
+  Future<TournamentParticipants?> getUserParticipationStatus(
+      String tournamentId) async {
+    return await _tournamentRepository.getUserParticipationStatus(tournamentId);
   }
 }

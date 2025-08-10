@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:sportsin/models/camp_openning.dart';
+import 'package:sportsin/models/applicant_response.dart';
 import 'package:sportsin/services/core/dio_client.dart';
 import 'package:sportsin/services/db/db_exceptions.dart';
 import '../../../models/enums.dart';
@@ -25,13 +26,9 @@ class CampOpeningRepository {
         );
       }
 
-      final Map<String, dynamic> requestBody = {
-        'opening_id': openingId,
-      };
-
       final response = await DioClient.instance.post(
-        'camp-openings/apply',
-        data: requestBody,
+        'openings/$openingId/apply',
+        data: {},
       );
 
       if (response.statusCode == 201) {
@@ -59,77 +56,32 @@ class CampOpeningRepository {
     try {
       if (opening.title.trim().isEmpty) {
         throw const DbInvalidInputException(
-          message: 'Opening title is required',
-          details: 'Title cannot be empty',
-        );
+            message: 'Opening title is required');
       }
-
-      if (opening.sportId.trim().isEmpty) {
-        throw const DbInvalidInputException(
-          message: 'Sport ID is required',
-          details: 'Sport ID cannot be empty',
-        );
+      if (opening.sportName.trim().isEmpty) {
+        throw const DbInvalidInputException(message: 'Sport name is required');
       }
-
       if (opening.position.trim().isEmpty) {
-        throw const DbInvalidInputException(
-          message: 'Position is required',
-          details: 'Position cannot be empty',
-        );
+        throw const DbInvalidInputException(message: 'Position is required');
       }
-
       if (opening.companyName.trim().isEmpty) {
         throw const DbInvalidInputException(
-          message: 'Company name is required',
-          details: 'Company name cannot be empty',
-        );
+            message: 'Company name is required');
       }
-
-      final Map<String, dynamic> requestBody = {};
-
-      requestBody['title'] = opening.title.trim();
-      requestBody['sport_id'] = opening.sportId;
-      requestBody['position'] = opening.position;
-      requestBody['company_name'] = opening.companyName;
-      requestBody['recruiter_id'] = opening.recruiterId;
-      requestBody['description'] = opening.description;
-      requestBody['status'] = opening.status.toJson();
-
-      if (opening.minAge != null && opening.minAge! > 0) {
-        requestBody['min_age'] = opening.minAge!;
-      }
-
-      if (opening.maxAge != null && opening.maxAge! > 0) {
-        requestBody['max_age'] = opening.maxAge!;
-      }
-
-      if (opening.minLevel != null && opening.minLevel!.isNotEmpty) {
-        requestBody['min_level'] = opening.minLevel!;
-      }
-
-      if (opening.minSalary != null && opening.minSalary! > 0) {
-        requestBody['min_salary'] = opening.minSalary!;
-      }
-
-      if (opening.maxSalary != null && opening.maxSalary! > 0) {
-        requestBody['max_salary'] = opening.maxSalary!;
-      }
-
-      if (opening.countryRestriction != null && opening.countryRestriction!.isNotEmpty) {
-        requestBody['country_restriction'] = opening.countryRestriction!;
-      }
-
-      if (opening.addressId != null && opening.addressId!.isNotEmpty) {
-        requestBody['address_id'] = opening.addressId!;
+      if (opening.address.country.trim().isEmpty ||
+          opening.address.state.trim().isEmpty ||
+          opening.address.city.trim().isEmpty) {
+        throw const DbInvalidInputException(
+            message: 'Complete address is required');
       }
 
       final response = await DioClient.instance.post(
-        'camp-openings',
-        data: requestBody,
+        'openings',
+        data: opening.toJson(),
       );
 
       if (response.statusCode == 201 && response.data != null) {
-        final openingData = response.data;
+        final openingData = response.data['opening'];
         final createdOpening = CampOpenning.fromJson(openingData);
         return createdOpening;
       } else {
@@ -160,7 +112,7 @@ class CampOpeningRepository {
         );
       }
 
-      final response = await DioClient.instance.delete('camp-openings/$openingId');
+      final response = await DioClient.instance.delete('openings/$openingId');
 
       if (response.statusCode == 200) {
         return;
@@ -196,14 +148,17 @@ class CampOpeningRepository {
       }
 
       final response = await DioClient.instance.get(
-        'camp-openings/my-openings',
+        'openings/my',
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode == 200) {
         final responseMap = response.data;
+        if (responseMap == null) {
+          return [];
+        }
 
-        if (responseMap is Map<String, dynamic> && 
+        if (responseMap is Map<String, dynamic> &&
             responseMap.containsKey('openings') &&
             responseMap['openings'] is List) {
           final List<dynamic> openingsDataList = responseMap['openings'];
@@ -243,7 +198,7 @@ class CampOpeningRepository {
     }
   }
 
-  Future<List<dynamic>> getOpeningApplicants(String openingId) async {
+  Future<List<ApplicantResponse>> getOpeningApplicants(String openingId) async {
     try {
       if (openingId.isEmpty) {
         throw const DbInvalidInputException(
@@ -253,22 +208,25 @@ class CampOpeningRepository {
       }
 
       final response = await DioClient.instance.get(
-        'camp-openings/$openingId/applicants',
+        'openings/$openingId/applicants',
       );
 
       if (response.statusCode == 200 && response.data != null) {
         final applicantsData = response.data;
 
-        if (applicantsData is Map<String, dynamic> && 
+        if (applicantsData is Map<String, dynamic> &&
             applicantsData.containsKey('applicants')) {
-          final List<dynamic> applicantsList = applicantsData['applicants'];
+          final List<dynamic> applicantsJson = applicantsData['applicants'];
+          final List<ApplicantResponse> applicantsList = applicantsJson
+              .where((e) => e != null && e is Map<String, dynamic>)
+              .map((e) => ApplicantResponse.fromJson(e as Map<String, dynamic>))
+              .toList();
           return applicantsList;
-        } else if (applicantsData is List) {
-          return applicantsData;
         } else {
           throw DbQueryException(
             message: 'Invalid response format',
-            details: 'Expected List or Map with applicants key but received: ${applicantsData.runtimeType}',
+            details:
+                'Expected List or Map with applicants key but received: ${applicantsData.runtimeType}',
           );
         }
       } else {
@@ -299,21 +257,11 @@ class CampOpeningRepository {
         );
       }
 
-      final response = await DioClient.instance.get('camp-openings/$openingId');
+      final response = await DioClient.instance.get('openings/$openingId');
 
       if (response.statusCode == 200 && response.data != null) {
-        final openingData = response.data;
-
-        if (openingData is Map<String, dynamic>) {
-          final opening = CampOpenning.fromJson(openingData);
-          return opening;
-        } else {
-          throw DbQueryException(
-            message: 'Invalid response format',
-            details:
-                'Expected opening object but received: ${openingData.runtimeType}',
-          );
-        }
+        final openingData = response.data['opening'];
+        return CampOpenning.fromJson(openingData);
       } else {
         throw DbQueryException(
           message: 'Unexpected response status',
@@ -340,7 +288,7 @@ class CampOpeningRepository {
     int? limit,
     int? offset,
     String? recruiterId,
-    String? sportId,
+    String? sportName,
     String? country,
     bool? applied,
   }) async {
@@ -359,8 +307,8 @@ class CampOpeningRepository {
         queryParams['recruiter_id'] = recruiterId;
       }
 
-      if (sportId != null && sportId.isNotEmpty) {
-        queryParams['sport_id'] = sportId;
+      if (sportName != null && sportName.isNotEmpty) {
+        queryParams['sport_name'] = sportName;
       }
 
       if (country != null && country.isNotEmpty) {
@@ -372,40 +320,17 @@ class CampOpeningRepository {
       }
 
       final response = await DioClient.instance.get(
-        'camp-openings',
+        'openings/filter',
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final responseMap = response.data;
-
-        if (responseMap is Map<String, dynamic> && 
-            responseMap.containsKey('openings') &&
-            responseMap['openings'] is List) {
-          final List<dynamic> openingsDataList = responseMap['openings'];
-
-          final List<CampOpenning> openings = openingsDataList
-              .where((e) => e != null && e is Map<String, dynamic>)
-              .map((e) => CampOpenning.fromJson(e as Map<String, dynamic>))
-              .toList();
-
-          return openings;
-        } else if (responseMap is List) {
-          final List<CampOpenning> openings = responseMap
-              .where((e) => e != null && e is Map<String, dynamic>)
-              .map((e) => CampOpenning.fromJson(e as Map<String, dynamic>))
-              .toList();
-
-          return openings;
-        } else {
-          return [];
-        }
+      if (response.statusCode == 200 && response.data?['openings'] is List) {
+        final List<dynamic> openingsDataList = response.data['openings'];
+        return openingsDataList
+            .map((e) => CampOpenning.fromJson(e as Map<String, dynamic>))
+            .toList();
       } else {
-        throw DbQueryException(
-          message: 'Unexpected response status',
-          details:
-              'Status: ${response.statusCode}, Message: ${response.statusMessage}',
-        );
+        return [];
       }
     } on DioException catch (e) {
       throw DbExceptions.handleDioException(e, 'retrieving camp openings');
@@ -419,57 +344,50 @@ class CampOpeningRepository {
     }
   }
 
-  Future<void> updateApplicationStatus({
-    required String openingId,
-    required String applicationId,
-    required OpeningStatus status,
-  }) async {
+  Future<void> acceptApplication(String openingId, String applicantId) async {
+    await _updateApplicationAction(openingId, applicantId, 'accept');
+  }
+
+  Future<void> rejectApplication(String openingId, String applicantId) async {
+    await _updateApplicationAction(openingId, applicantId, 'reject');
+  }
+
+  Future<void> withdrawApplication(String openingId, String applicantId) async {
+    await _updateApplicationAction(openingId, applicantId, 'withdraw');
+  }
+
+  Future<void> _updateApplicationAction(
+      String openingId, String applicantId, String action) async {
     try {
-      if (openingId.isEmpty) {
+      if (openingId.isEmpty || applicantId.isEmpty) {
         throw const DbInvalidInputException(
-          message: 'Opening ID is required',
-          details: 'Opening ID cannot be empty',
-        );
+            message: 'Opening and Applicant IDs are required');
       }
 
-      if (applicationId.isEmpty) {
-        throw const DbInvalidInputException(
-          message: 'Application ID is required',
-          details: 'Application ID cannot be empty',
-        );
-      }
-
-      final Map<String, dynamic> requestBody = {
-        'application_id': applicationId,
-        'status': status.toJson(),
-      };
-
-      final response = await DioClient.instance.put(
-        'camp-openings/$openingId/applications/status',
-        data: requestBody,
+      final response = await DioClient.instance.patch(
+        'openings/$openingId/applicants/$applicantId/$action',
       );
 
       if (response.statusCode == 200) {
         return;
       } else {
         throw DbUpdateException(
-          message: 'Unexpected response status',
+          message: 'Unexpected response status on action: $action',
           details:
               'Status: ${response.statusCode}, Message: ${response.statusMessage}',
         );
       }
     } on DioException catch (e) {
-      throw DbExceptions.handleDioException(e, 'updating application status');
+      throw DbExceptions.handleDioException(e, '$action application');
     } on DbExceptions {
       rethrow;
     } catch (e) {
       throw DbUpdateException(
-        message: 'Unexpected error updating application status',
+        message: 'Unexpected error on action: $action',
         details: 'Error: $e',
       );
     }
   }
-
 
   Future<CampOpenning> updateOpening(CampOpenning opening) async {
     try {
@@ -487,10 +405,10 @@ class CampOpeningRepository {
         );
       }
 
-      if (opening.sportId.trim().isEmpty) {
+      if (opening.sportName.trim().isEmpty) {
         throw const DbInvalidInputException(
-          message: 'Sport ID is required',
-          details: 'Sport ID cannot be empty',
+          message: 'Sport name is required',
+          details: 'Sport name cannot be empty',
         );
       }
 
@@ -508,53 +426,24 @@ class CampOpeningRepository {
         );
       }
 
-      final Map<String, dynamic> requestBody = {};
-
-      requestBody['title'] = opening.title.trim();
-      requestBody['sport_id'] = opening.sportId;
-      requestBody['position'] = opening.position;
-      requestBody['company_name'] = opening.companyName;
-      requestBody['recruiter_id'] = opening.recruiterId;
-      requestBody['description'] = opening.description;
-      requestBody['status'] = opening.status.toJson();
-
-      if (opening.minAge != null && opening.minAge! > 0) {
-        requestBody['min_age'] = opening.minAge!;
-      }
-
-      if (opening.maxAge != null && opening.maxAge! > 0) {
-        requestBody['max_age'] = opening.maxAge!;
-      }
-
-      if (opening.minLevel != null && opening.minLevel!.isNotEmpty) {
-        requestBody['min_level'] = opening.minLevel!;
-      }
-
-      if (opening.minSalary != null && opening.minSalary! > 0) {
-        requestBody['min_salary'] = opening.minSalary!;
-      }
-
-      if (opening.maxSalary != null && opening.maxSalary! > 0) {
-        requestBody['max_salary'] = opening.maxSalary!;
-      }
-
-      if (opening.countryRestriction != null && opening.countryRestriction!.isNotEmpty) {
-        requestBody['country_restriction'] = opening.countryRestriction!;
-      }
-
-      if (opening.addressId != null && opening.addressId!.isNotEmpty) {
-        requestBody['address_id'] = opening.addressId!;
+      // Address validation
+      if (opening.address.country.trim().isEmpty ||
+          opening.address.state.trim().isEmpty ||
+          opening.address.city.trim().isEmpty) {
+        throw const DbInvalidInputException(
+          message: 'Complete address is required',
+          details: 'Country, state, and city are required',
+        );
       }
 
       final response = await DioClient.instance.put(
-        'camp-openings/${opening.id}',
-        data: requestBody,
+        'openings/${opening.id}',
+        data: opening.toJson(),
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final openingData = response.data;
-        final updatedOpening = CampOpenning.fromJson(openingData);
-        return updatedOpening;
+      if (response.statusCode == 200 && response.data?['opening'] != null) {
+        final openingData = response.data['opening'];
+        return CampOpenning.fromJson(openingData);
       } else {
         throw DbUpdateException(
           message: 'Unexpected response status',
@@ -574,17 +463,13 @@ class CampOpeningRepository {
     }
   }
 
-
   Future<CampOpenning> updateOpeningStatus({
     required String openingId,
     required OpeningStatus status,
   }) async {
     try {
       if (openingId.isEmpty) {
-        throw const DbInvalidInputException(
-          message: 'Opening ID is required',
-          details: 'Opening ID cannot be empty',
-        );
+        throw const DbInvalidInputException(message: 'Opening ID is required');
       }
 
       final Map<String, dynamic> requestBody = {
@@ -592,14 +477,13 @@ class CampOpeningRepository {
       };
 
       final response = await DioClient.instance.patch(
-        'camp-openings/$openingId/status',
+        'openings/$openingId/status',
         data: requestBody,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final openingData = response.data;
-        final updatedOpening = CampOpenning.fromJson(openingData);
-        return updatedOpening;
+      if (response.statusCode == 200 && response.data?['opening'] != null) {
+        final openingData = response.data['opening'];
+        return CampOpenning.fromJson(openingData);
       } else {
         throw DbUpdateException(
           message: 'Unexpected response status',
@@ -614,47 +498,6 @@ class CampOpeningRepository {
     } catch (e) {
       throw DbUpdateException(
         message: 'Unexpected error updating opening status',
-        details: 'Error: $e',
-      );
-    }
-  }
-
-  Future<void> withdrawApplication(String openingId, String applicationId) async {
-    try {
-      if (openingId.isEmpty) {
-        throw const DbInvalidInputException(
-          message: 'Opening ID is required',
-          details: 'Opening ID cannot be empty',
-        );
-      }
-
-      if (applicationId.isEmpty) {
-        throw const DbInvalidInputException(
-          message: 'Application ID is required',
-          details: 'Application ID cannot be empty',
-        );
-      }
-
-      final response = await DioClient.instance.delete(
-        'camp-openings/$openingId/applications/$applicationId',
-      );
-
-      if (response.statusCode == 200) {
-        return;
-      } else {
-        throw DbDeleteException(
-          message: 'Unexpected response status',
-          details:
-              'Status: ${response.statusCode}, Message: ${response.statusMessage}',
-        );
-      }
-    } on DioException catch (e) {
-      throw DbExceptions.handleDioException(e, 'withdrawing application');
-    } on DbExceptions {
-      rethrow;
-    } catch (e) {
-      throw DbDeleteException(
-        message: 'Unexpected error withdrawing application',
         details: 'Error: $e',
       );
     }

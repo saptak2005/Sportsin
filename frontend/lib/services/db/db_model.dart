@@ -45,7 +45,7 @@ abstract class DbModel {
 
   Future<Tournament?> getTournamentById(String tournamentId);
 
-  Future<List<Tournament>> getTournaments({
+  Future<List<TournamentDetails>> getTournaments({
     String? hostId,
     String? sportId,
     String? status,
@@ -72,6 +72,19 @@ abstract class DbModel {
   Future<Tournament> updateTournament(Tournament tournament);
 
   Future<void> deleteTournament(String tournamentId);
+
+  Future<List<TournamentParticipants>> getTournamentParticipantsWithDetails(
+    String tournamentId, {
+    String? status,
+  });
+
+  Future<void> bulkUpdateParticipantStatus({
+    required String tournamentId,
+    required List<Map<String, String>> participantUpdates,
+  });
+
+  Future<TournamentParticipants?> getUserParticipationStatus(
+      String tournamentId);
 
   // acheivements
   Future<Achievement> createAcheivement(Achievement acheivement);
@@ -152,7 +165,7 @@ abstract class DbModel {
     int? limit,
     int? offset,
     String? recruiterId,
-    String? sportId,
+    String? sportName,
     String? country,
     bool? applied,
   });
@@ -170,17 +183,21 @@ abstract class DbModel {
 
   Future<void> withdrawApplication(String openingId, String applicationId);
 
-  Future<List<dynamic>> getOpeningApplicants(String openingId);
-
-  Future<void> updateApplicationStatus({
-    required String openingId,
-    required String applicationId,
-    required OpeningStatus status,
-  });
+  Future<List<ApplicantResponse>> getOpeningApplicants(String openingId);
 
   // referral code
-  Future<String> getMyReferralCode();
+  Future<String?> getMyReferralCode();
 
   // search
   Future<List<UserSearchResult>> searchUsers(String query);
+
+  // sports
+  Future<List<Sport>> getSports({int? limit, int? offset});
+
+  Future<Sport?> getSportByName(String name);
+
+  Future<Sport> createSport({
+    required String name,
+    String? description,
+  });
 }

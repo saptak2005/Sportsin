@@ -1,0 +1,10 @@
+export 'chat_repository.dart';
+export 'comment_repository.dart';
+export 'like_repository.dart';
+export 'search_repository.dart';
+export 'user_reporitory.dart';
+export 'post_repository.dart';
+export 'tournament_repository.dart';
+export 'acheivement_repository.dart';
+export 'camp_opening_repository.dart';
+export "sports_repository.dart";

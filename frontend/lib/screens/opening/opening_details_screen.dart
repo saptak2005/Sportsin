@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sportsin/models/camp_openning.dart';
 import 'package:sportsin/config/theme/app_colors.dart';
 import 'package:sportsin/models/enums.dart';
-import 'package:sportsin/components/custom_toast.dart';
 
 class OpeningDetailsScreen extends StatefulWidget {
   final CampOpenning opening;
@@ -206,7 +205,7 @@ class _OpeningDetailsScreenState extends State<OpeningDetailsScreen>
           _buildInfoRow(
               Icons.work_outline, 'Position', widget.opening.position),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.sports, 'Sport', widget.opening.sportId),
+          _buildInfoRow(Icons.sports, 'Sport', widget.opening.sportName),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.business, 'Company', widget.opening.companyName),
           if (widget.opening.countryRestriction != null) ...[
@@ -392,7 +391,7 @@ class _OpeningDetailsScreenState extends State<OpeningDetailsScreen>
     );
   }
 
-  Widget _buildApplyButton() {
+  /*Widget _buildApplyButton() {
     final isOpen = widget.opening.status == OpeningStatus.open;
 
     return Container(
@@ -449,9 +448,9 @@ class _OpeningDetailsScreenState extends State<OpeningDetailsScreen>
         ),
       ),
     );
-  }
+  }*/
 
-  void _handleApply() {
+  /*void _handleApply() {
     CustomToast.showSuccess(
       message: 'Application submitted to ${widget.opening.companyName}!',
     );
@@ -482,7 +481,7 @@ class _OpeningDetailsScreenState extends State<OpeningDetailsScreen>
         ],
       ),
     );
-  }
+  }*/
 
   String _getAgeRange() {
     if (widget.opening.minAge != null && widget.opening.maxAge != null) {

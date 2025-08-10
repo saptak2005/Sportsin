@@ -1,7 +1,6 @@
 import 'app_model.dart';
 
 class Address extends AppModel {
-  final String userId;
   final String country;
   final String state;
   final String city;
@@ -13,7 +12,6 @@ class Address extends AppModel {
     required super.id,
     required super.createdAt,
     required super.updatedAt,
-    required this.userId,
     required this.country,
     required this.state,
     required this.city,
@@ -27,7 +25,6 @@ class Address extends AppModel {
       id: json['id'] as String,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
-      userId: json['user_id'] as String,
       country: json['country'] as String,
       state: json['state'] as String,
       city: json['city'] as String,
@@ -41,7 +38,6 @@ class Address extends AppModel {
   Map<String, dynamic> toJson() {
     final json = super.toJson();
     json.addAll({
-      'user_id': userId,
       'country': country,
       'state': state,
       'city': city,
@@ -68,7 +64,6 @@ class Address extends AppModel {
       id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      userId: userId ?? this.userId,
       country: country ?? this.country,
       state: state ?? this.state,
       city: city ?? this.city,
@@ -83,7 +78,6 @@ class Address extends AppModel {
     if (identical(this, other)) return true;
     return other is Address &&
         super == other &&
-        other.userId == userId &&
         other.country == country &&
         other.state == state &&
         other.city == city &&
@@ -96,7 +90,6 @@ class Address extends AppModel {
   int get hashCode {
     return Object.hash(
       super.hashCode,
-      userId,
       country,
       state,
       city,
@@ -108,6 +101,6 @@ class Address extends AppModel {
 
   @override
   String toString() {
-    return 'Address(id: $id, userId: $userId, country: $country, city: $city)';
+    return 'Address(id: $id, country: $country, city: $city)';
   }
 }

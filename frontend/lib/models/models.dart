@@ -17,3 +17,4 @@ export 'chat_message.dart';
 export 'comment_model.dart';
 export 'camp_openning.dart';
 export 'user_search_result.dart';
+export 'applicant_response.dart';

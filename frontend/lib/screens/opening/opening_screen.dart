@@ -1,139 +1,217 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sportsin/services/db/db_provider.dart';
-
-import '../../components/job_banner.dart';
+import 'package:sportsin/components/custom_toast.dart';
+import 'package:sportsin/components/job_banner.dart';
 import '../../config/routes/route_names.dart';
-import '../../models/camp_openning.dart';
 import '../../models/enums.dart';
-import 'opening_details_screen.dart';
+import '../../models/camp_openning.dart';
 
-class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key});
+class CampPostOpenningScreen extends StatefulWidget {
+  const CampPostOpenningScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  State<CampPostOpenningScreen> createState() => _CampPostOpenningScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen> {
+class _CampPostOpenningScreenState extends State<CampPostOpenningScreen> {
+  List<CampOpenning> _openings = [];
+  bool _isLoading = false;
+  final ScrollController _scrollController = ScrollController();
+  int _currentOffset = 0;
+  final int _limit = 10;
+  bool _hasMoreData = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOpenings();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoading && _hasMoreData) {
+        _loadMoreOpenings();
+      }
+    }
+  }
+
+  Future<void> _loadOpenings() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _currentOffset = 0;
+      _hasMoreData = true;
+    });
+
+    try {
+      final user = DbProvider.instance.cashedUser;
+      final isRecruiter = user?.role == Role.recruiter;
+      List<CampOpenning> openings;
+
+      if (isRecruiter) {
+        // Recruiters only see their own openings
+        openings = await DbProvider.instance.getMyOpenings(
+          limit: _limit,
+          offset: _currentOffset,
+        );
+      } else {
+        // Players see all available openings
+        openings = await DbProvider.instance.getOpenings(
+          limit: _limit,
+          offset: _currentOffset,
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          _openings = openings;
+          _currentOffset = openings.length;
+          _hasMoreData = openings.length == _limit;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        CustomToast.showError(message: 'Failed to load camp openings');
+      }
+    }
+  }
+
+  Future<void> _loadMoreOpenings() async {
+    if (!mounted || _isLoading || !_hasMoreData) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = DbProvider.instance.cashedUser;
+      final isRecruiter = user?.role == Role.recruiter;
+      List<CampOpenning> moreOpenings;
+
+      if (isRecruiter) {
+        // Recruiters only see their own openings
+        moreOpenings = await DbProvider.instance.getMyOpenings(
+          limit: _limit,
+          offset: _currentOffset,
+        );
+      } else {
+        // Players see all available openings
+        moreOpenings = await DbProvider.instance.getOpenings(
+          limit: _limit,
+          offset: _currentOffset,
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          _openings.addAll(moreOpenings);
+          _currentOffset += moreOpenings.length;
+          _hasMoreData = moreOpenings.length == _limit;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        CustomToast.showError(message: 'Failed to load more openings');
+      }
+    }
+  }
+
+  Future<void> _applyToOpening(String openingId, String applicantId) async {
+    try {
+      await DbProvider.instance.applyToOpening(openingId);
+      CustomToast.showSuccess(message: 'Application submitted successfully!');
+      _loadOpenings();
+    } catch (e) {
+      CustomToast.showError(message: 'Failed to apply to opening');
+    }
+  }
+
+  /*Future<void> _withdrawApplication(
+      String openingId, String applicantId) async {
+    try {
+      await DbProvider.instance.withdrawApplication(openingId, applicantId);
+      CustomToast.showSuccess(message: 'Application withdrawn successfully!');
+      _loadOpenings(); // Refresh the list
+    } catch (e) {
+      CustomToast.showError(message: 'Failed to withdraw application');
+    }
+  }*/
+
+  Future<void> _viewApplicants(String openingId, String openingTitle) async {
+    context.pushNamed(
+      RouteNames.openingApplicants,
+      queryParameters: {
+        'openingId': openingId,
+        'openingTitle': openingTitle,
+      },
+    );
+  }
+
+  Future<void> _updateOpeningStatus(
+      CampOpenning opening, OpeningStatus newStatus) async {
+    try {
+      setState(() => _isLoading = true);
+
+      final updatedOpening = await DbProvider.instance.updateOpeningStatus(
+        openingId: opening.id,
+        status: newStatus,
+      );
+
+      final index = _openings.indexWhere((o) => o.id == opening.id);
+      if (index != -1) {
+        setState(() {
+          _openings[index] = updatedOpening;
+        });
+      }
+
+      final statusText = newStatus == OpeningStatus.open ? 'opened' : 'closed';
+      CustomToast.showSuccess(message: 'Opening $statusText successfully!');
+    } catch (e) {
+      CustomToast.showError(message: 'Failed to update opening status');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildOpeningCard(CampOpenning opening) {
+    final user = DbProvider.instance.cashedUser;
+    final isRecruiter = user?.role == Role.recruiter;
+
+    return JobBanner(
+      opening: opening,
+      onApply: () =>
+          _applyToOpening(opening.id, DbProvider.instance.cashedUser!.id),
+      onViewApplicants: () => _viewApplicants(opening.id, opening.title),
+      onUpdateStatus: isRecruiter
+          ? (newStatus) => _updateOpeningStatus(opening, newStatus)
+          : null,
+      showApplyButton: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Example 1: Open Football Coach Position
-    final jobOpening1 = CampOpenning(
-      id: '1',
-      createdAt: '2025-01-15T10:00:00Z',
-      updatedAt: '2025-01-20T14:30:00Z',
-      sportId: 'football_001',
-      recruiterId: 'recruiter_123',
-      companyName: 'Manchester United FC',
-      status: OpeningStatus.open,
-      title: 'Youth Football Coach',
-      description: 'We are looking for a passionate and experienced youth football coach to join our academy. The ideal candidate will have experience working with children aged 8-16 and a strong understanding of football fundamentals.',
-      position: 'Head Coach',
-      minAge: 25,
-      maxAge: 45,
-      minLevel: 'UEFA B License',
-      minSalary: 45000,
-      maxSalary: 65000,
-      countryRestriction: 'United Kingdom',
-      addressId: 'addr_manchester_001',
-      stats: {'applications': 24, 'views': 156},
-    );
-
-    // Example 2: Closed Basketball Position
-    final jobOpening2 = CampOpenning(
-      id: '2',
-      createdAt: '2025-01-10T09:00:00Z',
-      updatedAt: '2025-01-22T16:45:00Z',
-      sportId: 'basketball_002',
-      recruiterId: 'recruiter_456',
-      companyName: 'LA Lakers',
-      status: OpeningStatus.closed,
-      title: 'Assistant Basketball Coach',
-      description: 'Join our professional coaching staff as an assistant coach. Responsibilities include player development, game analysis, and supporting the head coach during practices and games.',
-      position: 'Assistant Coach',
-      minAge: 30,
-      maxAge: 50,
-      minLevel: 'NCAA Experience',
-      minSalary: 80000,
-      maxSalary: 120000,
-      countryRestriction: 'United States',
-      addressId: 'addr_la_001',
-      stats: {'applications': 89, 'views': 445},
-    );
-
-    // Example 3: Tennis Academy Position
-    final jobOpening3 = CampOpenning(
-      id: '3',
-      createdAt: '2025-01-18T11:30:00Z',
-      updatedAt: '2025-01-23T12:00:00Z',
-      sportId: 'tennis_003',
-      recruiterId: 'recruiter_789',
-      companyName: 'Wimbledon Tennis Academy',
-      status: OpeningStatus.open,
-      title: 'Junior Tennis Instructor',
-      description: 'Teach tennis fundamentals to junior players aged 6-18. Create engaging lesson plans, conduct group and individual sessions, and help young athletes develop their skills.',
-      position: 'Tennis Instructor',
-      minAge: 22,
-      maxAge: 40,
-      minLevel: 'LTA Level 2',
-      minSalary: 35000,
-      maxSalary: 50000,
-      countryRestriction: 'United Kingdom',
-      addressId: 'addr_wimbledon_001',
-      stats: {'applications': 12, 'views': 78},
-    );
-
-    // Example 4: High-paying Swimming Position
-    final jobOpening4 = CampOpenning(
-      id: '4',
-      createdAt: '2025-01-20T14:00:00Z',
-      updatedAt: '2025-01-23T10:15:00Z',
-      sportId: 'swimming_004',
-      recruiterId: 'recruiter_012',
-      companyName: 'Olympic Training Center',
-      status: OpeningStatus.open,
-      title: 'Elite Swimming Coach',
-      description: 'Lead our elite swimming program for Olympic hopefuls. Develop training programs, analyze performance data, and guide athletes to international competitions.',
-      position: 'Head Swimming Coach',
-      minAge: 35,
-      maxAge: 55,
-      minLevel: 'Olympic Experience',
-      minSalary: 150000,
-      maxSalary: 250000,
-      countryRestriction: 'United States',
-      addressId: 'addr_colorado_001',
-      stats: {'applications': 5, 'views': 234},
-    );
-
-    // Example 5: Cricket Academy Position
-    final jobOpening5 = CampOpenning(
-      id: '5',
-      createdAt: '2025-01-22T08:45:00Z',
-      updatedAt: '2025-01-23T09:30:00Z',
-      sportId: 'cricket_005',
-      recruiterId: 'recruiter_345',
-      companyName: 'Royal Cricket Academy',
-      status: OpeningStatus.open,
-      title: 'Cricket Development Coach',
-      description: 'Join our world-class cricket academy to develop the next generation of cricket stars. Focus on technique development, match strategy, and player mentorship.',
-      position: 'Development Coach',
-      minAge: 28,
-      maxAge: 50,
-      minLevel: 'Level 3 ECB',
-      minSalary: 55000,
-      maxSalary: 75000,
-      countryRestriction: 'India',
-      addressId: 'addr_mumbai_001',
-      stats: {'applications': 18, 'views': 92},
-    );
+    final user = DbProvider.instance.cashedUser;
+    final isRecruiter = user?.role == Role.recruiter;
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: Column(
         children: [
           // Create Job Post Header (only for recruiters)
-          if (DbProvider.instance.cashedUser?.role == Role.recruiter) ...[
+          if (isRecruiter) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16.0),
@@ -161,8 +239,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.work_outline,
-                        color: Color(0xFF0A66C2),
+                        Icons.work_rounded,
+                        color: Colors.red,
                         size: 28,
                       ),
                       SizedBox(width: 8),
@@ -192,9 +270,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       context.pushNamed(RouteNames.jobCreation);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0A66C2),
+                      backgroundColor: Colors.red[700],
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
@@ -207,7 +286,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         Icon(Icons.add_circle_outline, size: 20),
                         SizedBox(width: 8),
                         Text(
-                          'Create Job Post',
+                          'Create Opening',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -220,159 +299,70 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
             ),
           ],
-          
-          // Job List
+          // Openings List
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              children: [
-          JobBanner(
-            opening: jobOpening1,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => OpeningDetailsScreen(opening: jobOpening1),
-                ),
-              );
-            },
-            onApply: () {
-              debugPrint('Applied to Manchester United job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Application submitted to Manchester United FC!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            onViewApplicants: () {
-              debugPrint('Viewing applicants for Manchester United job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Viewing applicants for this position'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
+            child: _isLoading && _openings.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF0A66C2),
+                    ),
+                  )
+                : _openings.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.work_off,
+                              size: 64,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              isRecruiter
+                                  ? 'No openings created yet'
+                                  : 'No openings available',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (isRecruiter) ...[
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () {
+                                  context.pushNamed(RouteNames.jobCreation);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[700],
+                                ),
+                                child: const Text('Create Your First Opening'),
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadOpenings,
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: _openings.length + (_isLoading ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == _openings.length) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF0A66C2),
+                                  ),
+                                ),
+                              );
+                            }
+                            return _buildOpeningCard(_openings[index]);
+                          },
+                        ),
+                      ),
           ),
-          
-          JobBanner(
-            opening: jobOpening2,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => OpeningDetailsScreen(opening: jobOpening2),
-                ),
-              );
-            },
-            onApply: () {
-              debugPrint('Tried to apply to closed position');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('This position is currently closed'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-            },
-            onViewApplicants: () {
-              debugPrint('Viewing applicants for LA Lakers job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Viewing applicants for this position'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-          ),
-          
-          JobBanner(
-            opening: jobOpening3,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => OpeningDetailsScreen(opening: jobOpening3),
-                ),
-              );
-            },
-            onApply: () {
-              debugPrint('Applied to Wimbledon job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Application submitted to Wimbledon Academy!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            onViewApplicants: () {
-              debugPrint('Viewing applicants for Wimbledon job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Viewing applicants for this position'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-          ),
-          
-          JobBanner(
-            opening: jobOpening4,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => OpeningDetailsScreen(opening: jobOpening4),
-                ),
-              );
-            },
-            onApply: () {
-              debugPrint('Applied to Olympic Training Center job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Application submitted to Olympic Training Center!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            onViewApplicants: () {
-              debugPrint('Viewing applicants for Olympic Training Center job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Viewing applicants for this position'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-          ),
-          
-          JobBanner(
-            opening: jobOpening5,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => OpeningDetailsScreen(opening: jobOpening5),
-                ),
-              );
-            },
-            onApply: () {
-              debugPrint('Applied to Royal Cricket Academy job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Application submitted to Royal Cricket Academy!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            onViewApplicants: () {
-              debugPrint('Viewing applicants for Royal Cricket Academy job');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Viewing applicants for this position'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-          ),
-            ],
-          ),
-        ),
         ],
       ),
     );

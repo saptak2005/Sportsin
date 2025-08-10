@@ -64,12 +64,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
       child: TextFormField(
         controller: widget.controller,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
+          color: Colors.white,
         ),
         decoration: InputDecoration(
           labelText: widget.labelText,
           labelStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: Colors.white,
           ),
           prefixIcon: widget.prefixIcon,
           suffixIcon: effectiveSuffixIcon,
@@ -99,7 +99,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
           ),
           filled: true,
-          fillColor: Theme.of(context).colorScheme.surface,
+          fillColor: Colors.grey[900],
         ),
         obscureText: widget.isPasswordField ? _isObscured : widget.obscureText,
         validator: widget.validator,

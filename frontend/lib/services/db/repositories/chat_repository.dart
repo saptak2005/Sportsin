@@ -126,6 +126,9 @@ class ChatRepository {
           .get('chat/rooms/$roomId/messages', queryParameters: queryParams);
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
+        if (data.isEmpty) {
+          return [];
+        }
         return data.map((message) => ChatMessage.fromJson(message)).toList();
       } else {
         throw DbExceptions(
